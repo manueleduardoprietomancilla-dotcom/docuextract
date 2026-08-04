@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DocuExtract AI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f0f1a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      padding: 20px 40px;
+      border-bottom: 1px solid #2d3748;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header .logo {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(90deg, #4fc3f7, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header .tagline {
+      font-size: 13px;
+      color: #718096;
+      margin-left: auto;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .hero h1 {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      background: linear-gradient(90deg, #4fc3f7, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      color: #718096;
+      font-size: 16px;
+    }
+
+    .api-key-section {
+      background: #1a1a2e;
+      border: 1px solid #2d3748;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .api-key-section label {
+      display: block;
+      font-size: 13px;
+      color: #a78bfa;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .api-key-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .api-key-row input {
+      flex: 1;
+      background: #0f0f1a;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #e2e8f0;
+      font-size: 14px;
+      font-family: monospace;
+    }
+
+    .api-key-row input:focus {
+      outline: none;
+      border-color: #4fc3f7;
+    }
+
+    .btn-save {
+      background: #4fc3f7;
+      color: #0f0f1a;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      transition: opacity 0.2s;
+    }
+
+    .btn-save:hover { opacity: 0.85; }
+
+    .upload-area {
+      background: #1a1a2e;
+      border: 2px dashed #2d3748;
+      border-radius: 16px;
+      padding: 60px 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 24px;
+    }
+
+    .upload-area:hover, .upload-area.dragover {
+      border-color: #4fc3f7;
+      background: #1e2a3a;
+    }
+
+    .upload-icon { font-size: 48px; margin-bottom: 16px; }
+
+    .upload-area h2 {
+      font-size: 20px;
+      margin-bottom: 8px;
+      color: #e2e8f0;
+    }
+
+    .upload-area p {
+      color: #718096;
+      font-size: 14px;
+    }
+
+    .upload-area .formats {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: #2d3748;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #a0aec0;
+    }
+
+    #fileInput { display: none; }
+
+    .processing {
+      display: none;
+      text-align: center;
+      padding: 40px;
+      background: #1a1a2e;
+      border-radius: 16px;
+      margin-bottom: 24px;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid #2d3748;
+      border-top-color: #4fc3f7;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .results {
+      display: none;
+    }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .results-header h2 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .btn-export {
+      background: linear-gradient(135deg, #4fc3f7, #a78bfa);
+      color: #0f0f1a;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+      transition: opacity 0.2s;
+    }
+
+    .btn-export:hover { opacity: 0.85; }
+
+    .btn-new {
+      background: transparent;
+      color: #4fc3f7;
+      border: 1px solid #4fc3f7;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 10px;
+      transition: all 0.2s;
+    }
+
+    .btn-new:hover { background: #4fc3f720; }
+
+    .card {
+      background: #1a1a2e;
+      border: 1px solid #2d3748;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #4fc3f7;
+      margin-bottom: 14px;
+    }
+
+    .field-row {
+      display: flex;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid #2d374830;
+    }
+
+    .field-row:last-child { border-bottom: none; }
+
+    .field-label {
+      min-width: 160px;
+      font-size: 13px;
+      color: #718096;
+      font-weight: 500;
+    }
+
+    .field-value {
+      font-size: 13px;
+      color: #e2e8f0;
+      flex: 1;
+    }
+
+    .doc-type-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #4fc3f720, #a78bfa20);
+      border: 1px solid #4fc3f740;
+      color: #4fc3f7;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      padding: 8px 12px;
+      background: #16213e;
+      color: #a78bfa;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #2d374840;
+      color: #e2e8f0;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .error-msg {
+      background: #2d1515;
+      border: 1px solid #c53030;
+      color: #fc8181;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .summary-text {
+      color: #a0aec0;
+      font-size: 14px;
+      font-style: italic;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⚡ DocuExtract AI</div>
+  <div class="tagline">Powered by Claude AI</div>
+</header>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>Extract data from any document</h1>
+    <p>Upload invoices, contracts, receipts or any business document — AI extracts all relevant data instantly</p>
+  </div>
+
+  <div class="api-key-section">
+    <label>Anthropic API Key</label>
+    <div class="api-key-row">
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-..." />
+      <button class="btn-save" onclick="saveApiKey()">Save</button>
+    </div>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+    <div class="upload-icon">📄</div>
+    <h2>Drop your document here</h2>
+    <p>or click to browse files</p>
+    <div class="formats">
+      <span class="badge">PDF</span>
+      <span class="badge">JPG</span>
+      <span class="badge">PNG</span>
+      <span class="badge">WEBP</span>
+    </div>
+    <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif" />
+  </div>
+
+  <div class="processing" id="processing">
+    <div class="spinner"></div>
+    <p style="color:#718096;">AI is analyzing your document...</p>
+  </div>
+
+  <div class="results" id="results">
+    <div class="results-header">
+      <h2>Extracted Data</h2>
+      <div>
+        <button class="btn-new" onclick="resetApp()">+ New Document</button>
+        <button class="btn-export" onclick="exportExcel()">⬇ Export Excel</button>
+      </div>
+    </div>
+    <div id="resultsContent"></div>
+  </div>
+
+</div>
+
+<script>
+  let currentData = null;
+  let currentFilename = null;
+
+  // Load saved API key
+  const savedKey = localStorage.getItem('anthropic_api_key');
+  if (savedKey) {
+    document.getElementById('apiKeyInput').value = savedKey;
+    document.getElementById('apiKeyInput').setAttribute('data-saved', 'true');
+  }
+
+  function saveApiKey() {
+    const key = document.getElementById('apiKeyInput').value.trim();
+    if (!key) return alert('Please enter your API key');
+    localStorage.setItem('anthropic_api_key', key);
+    alert('API key saved!');
+  }
+
+  // Drag and drop
+  const uploadArea = document.getElementById('uploadArea');
+  uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+  });
+
+  document.getElementById('fileInput').addEventListener('change', e => {
+    if (e.target.files[0]) processFile(e.target.files[0]);
+  });
+
+  async function processFile(file) {
+    const apiKey = document.getElementById('apiKeyInput').value.trim();
+    if (!apiKey) {
+      showError('Please enter your Anthropic API key first.');
+      return;
+    }
+
+    // Save key automatically
+    localStorage.setItem('anthropic_api_key', apiKey);
+
+    hideError();
+    showProcessing();
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('/extract', {
+        method: 'POST',
+        headers: { 'X-API-Key': apiKey },
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.detail || 'Error processing document');
+      }
+
+      currentData = result.data;
+      currentFilename = result.filename;
+      renderResults(result.data);
+      showResults();
+    } catch (err) {
+      hideProcessing();
+      showError(err.message);
+    }
+  }
+
+  function renderResults(data) {
+    const container = document.getElementById('resultsContent');
+    let html = '';
+
+    // Document type + summary
+    if (data.document_type) {
+      html += `<div class="doc-type-badge">${data.document_type}</div>`;
+    }
+    if (data.summary) {
+      html += `<p class="summary-text">${data.summary}</p>`;
+    }
+
+    // Key fields
+    const kf = data.key_fields || {};
+    const kfEntries = Object.entries(kf).filter(([, v]) => v);
+    if (kfEntries.length) {
+      html += `<div class="card"><div class="card-title">Key Fields</div>`;
+      kfEntries.forEach(([k, v]) => {
+        html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`;
+      });
+      html += `</div>`;
+    }
+
+    // Parties
+    const issuer = data.parties?.issuer || {};
+    const recipient = data.parties?.recipient || {};
+
+    const issuerEntries = Object.entries(issuer).filter(([, v]) => v);
+    if (issuerEntries.length) {
+      html += `<div class="card"><div class="card-title">Issuer / From</div>`;
+      issuerEntries.forEach(([k, v]) => {
+        html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`;
+      });
+      html += `</div>`;
+    }
+
+    const recipientEntries = Object.entries(recipient).filter(([, v]) => v);
+    if (recipientEntries.length) {
+      html += `<div class="card"><div class="card-title">Recipient / To</div>`;
+      recipientEntries.forEach(([k, v]) => {
+        html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`;
+      });
+      html += `</div>`;
+    }
+
+    // Line items
+    const items = data.line_items || [];
+    if (items.length) {
+      html += `<div class="card"><div class="card-title">Line Items</div>
+        <table>
+          <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+          <tbody>`;
+      items.forEach(item => {
+        html += `<tr>
+          <td>${item.description || ''}</td>
+          <td>${item.quantity || ''}</td>
+          <td>${item.unit_price || ''}</td>
+          <td>${item.total || ''}</td>
+        </tr>`;
+      });
+      html += `</tbody></table></div>`;
+    }
+
+    // Additional info
+    const ai = data.additional_info || {};
+    const aiEntries = Object.entries(ai).filter(([, v]) => v);
+    if (aiEntries.length) {
+      html += `<div class="card"><div class="card-title">Additional Info</div>`;
+      aiEntries.forEach(([k, v]) => {
+        html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`;
+      });
+      html += `</div>`;
+    }
+
+    container.innerHTML = html;
+  }
+
+  async function exportExcel() {
+    if (!currentData) return;
+    try {
+      const response = await fetch('/export-excel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: currentData, filename: currentFilename })
+      });
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = currentFilename.replace(/\.[^.]+$/, '') + '_extracted.xlsx';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      showError('Error exporting Excel: ' + err.message);
+    }
+  }
+
+  function formatLabel(key) {
+    return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  function showProcessing() {
+    document.getElementById('uploadArea').style.display = 'none';
+    document.getElementById('processing').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+  }
+
+  function showResults() {
+    document.getElementById('processing').style.display = 'none';
+    document.getElementById('results').style.display = 'block';
+  }
+
+  function hideProcessing() {
+    document.getElementById('processing').style.display = 'none';
+    document.getElementById('uploadArea').style.display = 'block';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function hideError() {
+    document.getElementById('errorMsg').style.display = 'none';
+  }
+
+  function resetApp() {
+    currentData = null;
+    currentFilename = null;
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('uploadArea').style.display = 'block';
+    document.getElementById('fileInput').value = '';
+    hideError();
+  }
+</script>
+</body>
+</html>
