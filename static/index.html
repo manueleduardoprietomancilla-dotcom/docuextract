@@ -35,7 +35,35 @@
       font-size: 13px;
       color: #718096;
       margin-left: auto;
+      margin-right: 14px;
     }
+
+    .lang-switcher {
+      display: flex;
+      gap: 4px;
+      background: #0f0f1a;
+      border-radius: 8px;
+      padding: 4px;
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: #718096;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .lang-btn.active {
+      background: #4fc3f7;
+      color: #0f0f1a;
+    }
+
+    .lang-btn:hover:not(.active) { color: #e2e8f0; }
 
     .container {
       max-width: 900px;
@@ -57,10 +85,7 @@
       -webkit-text-fill-color: transparent;
     }
 
-    .hero p {
-      color: #718096;
-      font-size: 16px;
-    }
+    .hero p { color: #718096; font-size: 16px; }
 
     .api-key-section {
       background: #1a1a2e;
@@ -80,10 +105,7 @@
       letter-spacing: 0.5px;
     }
 
-    .api-key-row {
-      display: flex;
-      gap: 10px;
-    }
+    .api-key-row { display: flex; gap: 10px; }
 
     .api-key-row input {
       flex: 1;
@@ -96,10 +118,7 @@
       font-family: monospace;
     }
 
-    .api-key-row input:focus {
-      outline: none;
-      border-color: #4fc3f7;
-    }
+    .api-key-row input:focus { outline: none; border-color: #4fc3f7; }
 
     .btn-save {
       background: #4fc3f7;
@@ -132,17 +151,8 @@
     }
 
     .upload-icon { font-size: 48px; margin-bottom: 16px; }
-
-    .upload-area h2 {
-      font-size: 20px;
-      margin-bottom: 8px;
-      color: #e2e8f0;
-    }
-
-    .upload-area p {
-      color: #718096;
-      font-size: 14px;
-    }
+    .upload-area h2 { font-size: 20px; margin-bottom: 8px; color: #e2e8f0; }
+    .upload-area p { color: #718096; font-size: 14px; }
 
     .upload-area .formats {
       margin-top: 12px;
@@ -183,9 +193,7 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .results {
-      display: none;
-    }
+    .results { display: none; }
 
     .results-header {
       display: flex;
@@ -194,10 +202,7 @@
       margin-bottom: 20px;
     }
 
-    .results-header h2 {
-      font-size: 20px;
-      font-weight: 600;
-    }
+    .results-header h2 { font-size: 20px; font-weight: 600; }
 
     .btn-export {
       background: linear-gradient(135deg, #4fc3f7, #a78bfa);
@@ -261,11 +266,7 @@
       font-weight: 500;
     }
 
-    .field-value {
-      font-size: 13px;
-      color: #e2e8f0;
-      flex: 1;
-    }
+    .field-value { font-size: 13px; color: #e2e8f0; flex: 1; }
 
     .doc-type-badge {
       display: inline-block;
@@ -281,11 +282,7 @@
       margin-bottom: 12px;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
 
     th {
       text-align: left;
@@ -328,21 +325,27 @@
 
 <header>
   <div class="logo">⚡ DocuExtract AI</div>
-  <div class="tagline">Powered by Claude AI</div>
+  <div class="tagline" id="tagline">Powered by Claude AI</div>
+  <div class="lang-switcher">
+    <button class="lang-btn active" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" onclick="setLang('es')">ES</button>
+    <button class="lang-btn" onclick="setLang('pt')">PT</button>
+    <button class="lang-btn" onclick="setLang('fr')">FR</button>
+  </div>
 </header>
 
 <div class="container">
 
   <div class="hero">
-    <h1>Extract data from any document</h1>
-    <p>Upload invoices, contracts, receipts or any business document — AI extracts all relevant data instantly</p>
+    <h1 id="heroTitle">Extract data from any document</h1>
+    <p id="heroSubtitle">Upload invoices, contracts, receipts or any business document — AI extracts all relevant data instantly</p>
   </div>
 
   <div class="api-key-section">
-    <label>Anthropic API Key</label>
+    <label id="apiKeyLabel">Anthropic API Key</label>
     <div class="api-key-row">
       <input type="password" id="apiKeyInput" placeholder="sk-ant-..." />
-      <button class="btn-save" onclick="saveApiKey()">Save</button>
+      <button class="btn-save" id="btnSave" onclick="saveApiKey()">Save</button>
     </div>
   </div>
 
@@ -350,8 +353,8 @@
 
   <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
     <div class="upload-icon">📄</div>
-    <h2>Drop your document here</h2>
-    <p>or click to browse files</p>
+    <h2 id="uploadTitle">Drop your document here</h2>
+    <p id="uploadSubtitle">or click to browse files</p>
     <div class="formats">
       <span class="badge">PDF</span>
       <span class="badge">JPG</span>
@@ -363,15 +366,15 @@
 
   <div class="processing" id="processing">
     <div class="spinner"></div>
-    <p style="color:#718096;">AI is analyzing your document...</p>
+    <p id="processingText" style="color:#718096;">AI is analyzing your document...</p>
   </div>
 
   <div class="results" id="results">
     <div class="results-header">
-      <h2>Extracted Data</h2>
+      <h2 id="resultsTitle">Extracted Data</h2>
       <div>
-        <button class="btn-new" onclick="resetApp()">+ New Document</button>
-        <button class="btn-export" onclick="exportExcel()">⬇ Export Excel</button>
+        <button class="btn-new" id="btnNew" onclick="resetApp()">+ New Document</button>
+        <button class="btn-export" id="btnExport" onclick="exportExcel()">⬇ Export Excel</button>
       </div>
     </div>
     <div id="resultsContent"></div>
@@ -380,24 +383,143 @@
 </div>
 
 <script>
+  const TRANSLATIONS = {
+    en: {
+      tagline: 'Powered by Claude AI',
+      heroTitle: 'Extract data from any document',
+      heroSubtitle: 'Upload invoices, contracts, receipts or any business document — AI extracts all relevant data instantly',
+      apiKeyLabel: 'Anthropic API Key',
+      btnSave: 'Save',
+      uploadTitle: 'Drop your document here',
+      uploadSubtitle: 'or click to browse files',
+      processingText: 'AI is analyzing your document...',
+      resultsTitle: 'Extracted Data',
+      btnNew: '+ New Document',
+      btnExport: '⬇ Export Excel',
+      alertNoKey: 'Please enter your API key',
+      alertKeySaved: 'API key saved!',
+      alertNoKeyUpload: 'Please enter your Anthropic API key first.',
+      errorExport: 'Error exporting Excel: ',
+      cardKeyFields: 'Key Fields',
+      cardIssuer: 'Issuer / From',
+      cardRecipient: 'Recipient / To',
+      cardLineItems: 'Line Items',
+      cardAdditional: 'Additional Info',
+      thDesc: 'Description', thQty: 'Qty', thUnit: 'Unit Price', thTotal: 'Total',
+    },
+    es: {
+      tagline: 'Impulsado por Claude AI',
+      heroTitle: 'Extrae datos de cualquier documento',
+      heroSubtitle: 'Sube facturas, contratos, recibos o cualquier documento de negocio — la IA extrae todos los datos al instante',
+      apiKeyLabel: 'Clave API de Anthropic',
+      btnSave: 'Guardar',
+      uploadTitle: 'Arrastra tu documento aquí',
+      uploadSubtitle: 'o haz clic para buscar archivos',
+      processingText: 'La IA está analizando tu documento...',
+      resultsTitle: 'Datos Extraídos',
+      btnNew: '+ Nuevo Documento',
+      btnExport: '⬇ Exportar Excel',
+      alertNoKey: 'Por favor ingresa tu clave API',
+      alertKeySaved: '¡Clave API guardada!',
+      alertNoKeyUpload: 'Por favor ingresa tu clave API de Anthropic primero.',
+      errorExport: 'Error al exportar Excel: ',
+      cardKeyFields: 'Campos Clave',
+      cardIssuer: 'Emisor / De',
+      cardRecipient: 'Receptor / Para',
+      cardLineItems: 'Artículos',
+      cardAdditional: 'Info Adicional',
+      thDesc: 'Descripción', thQty: 'Cant.', thUnit: 'Precio Unit.', thTotal: 'Total',
+    },
+    pt: {
+      tagline: 'Desenvolvido por Claude AI',
+      heroTitle: 'Extraia dados de qualquer documento',
+      heroSubtitle: 'Carregue faturas, contratos, recibos ou qualquer documento comercial — a IA extrai todos os dados instantaneamente',
+      apiKeyLabel: 'Chave API da Anthropic',
+      btnSave: 'Salvar',
+      uploadTitle: 'Arraste seu documento aqui',
+      uploadSubtitle: 'ou clique para procurar arquivos',
+      processingText: 'A IA está analisando seu documento...',
+      resultsTitle: 'Dados Extraídos',
+      btnNew: '+ Novo Documento',
+      btnExport: '⬇ Exportar Excel',
+      alertNoKey: 'Por favor insira sua chave API',
+      alertKeySaved: 'Chave API salva!',
+      alertNoKeyUpload: 'Por favor insira sua chave API da Anthropic primeiro.',
+      errorExport: 'Erro ao exportar Excel: ',
+      cardKeyFields: 'Campos Chave',
+      cardIssuer: 'Emissor / De',
+      cardRecipient: 'Destinatário / Para',
+      cardLineItems: 'Itens',
+      cardAdditional: 'Info Adicional',
+      thDesc: 'Descrição', thQty: 'Qtd.', thUnit: 'Preço Unit.', thTotal: 'Total',
+    },
+    fr: {
+      tagline: 'Propulsé par Claude AI',
+      heroTitle: 'Extrayez les données de n\'importe quel document',
+      heroSubtitle: 'Téléchargez des factures, contrats, reçus ou tout document commercial — l\'IA extrait toutes les données instantanément',
+      apiKeyLabel: 'Clé API Anthropic',
+      btnSave: 'Sauvegarder',
+      uploadTitle: 'Déposez votre document ici',
+      uploadSubtitle: 'ou cliquez pour parcourir les fichiers',
+      processingText: 'L\'IA analyse votre document...',
+      resultsTitle: 'Données Extraites',
+      btnNew: '+ Nouveau Document',
+      btnExport: '⬇ Exporter Excel',
+      alertNoKey: 'Veuillez entrer votre clé API',
+      alertKeySaved: 'Clé API sauvegardée!',
+      alertNoKeyUpload: 'Veuillez d\'abord entrer votre clé API Anthropic.',
+      errorExport: 'Erreur lors de l\'export Excel: ',
+      cardKeyFields: 'Champs Clés',
+      cardIssuer: 'Émetteur / De',
+      cardRecipient: 'Destinataire / À',
+      cardLineItems: 'Articles',
+      cardAdditional: 'Info Supplémentaire',
+      thDesc: 'Description', thQty: 'Qté', thUnit: 'Prix Unit.', thTotal: 'Total',
+    }
+  };
+
+  let currentLang = localStorage.getItem('lang') || 'en';
   let currentData = null;
   let currentFilename = null;
 
-  // Load saved API key
-  const savedKey = localStorage.getItem('anthropic_api_key');
-  if (savedKey) {
-    document.getElementById('apiKeyInput').value = savedKey;
-    document.getElementById('apiKeyInput').setAttribute('data-saved', 'true');
+  function t(key) { return TRANSLATIONS[currentLang][key] || key; }
+
+  function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('lang', lang);
+    document.querySelectorAll('.lang-btn').forEach(b => {
+      b.classList.toggle('active', b.textContent === lang.toUpperCase());
+    });
+    applyTranslations();
   }
+
+  function applyTranslations() {
+    document.getElementById('tagline').textContent = t('tagline');
+    document.getElementById('heroTitle').textContent = t('heroTitle');
+    document.getElementById('heroSubtitle').textContent = t('heroSubtitle');
+    document.getElementById('apiKeyLabel').textContent = t('apiKeyLabel');
+    document.getElementById('btnSave').textContent = t('btnSave');
+    document.getElementById('uploadTitle').textContent = t('uploadTitle');
+    document.getElementById('uploadSubtitle').textContent = t('uploadSubtitle');
+    document.getElementById('processingText').textContent = t('processingText');
+    document.getElementById('resultsTitle').textContent = t('resultsTitle');
+    document.getElementById('btnNew').textContent = t('btnNew');
+    document.getElementById('btnExport').textContent = t('btnExport');
+    if (currentData) renderResults(currentData);
+  }
+
+  // Init
+  const savedKey = localStorage.getItem('anthropic_api_key');
+  if (savedKey) document.getElementById('apiKeyInput').value = savedKey;
+  setLang(currentLang);
 
   function saveApiKey() {
     const key = document.getElementById('apiKeyInput').value.trim();
-    if (!key) return alert('Please enter your API key');
+    if (!key) return alert(t('alertNoKey'));
     localStorage.setItem('anthropic_api_key', key);
-    alert('API key saved!');
+    alert(t('alertKeySaved'));
   }
 
-  // Drag and drop
   const uploadArea = document.getElementById('uploadArea');
   uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
   uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
@@ -414,33 +536,20 @@
 
   async function processFile(file) {
     const apiKey = document.getElementById('apiKeyInput').value.trim();
-    if (!apiKey) {
-      showError('Please enter your Anthropic API key first.');
-      return;
-    }
-
-    // Save key automatically
+    if (!apiKey) { showError(t('alertNoKeyUpload')); return; }
     localStorage.setItem('anthropic_api_key', apiKey);
-
     hideError();
     showProcessing();
-
     const formData = new FormData();
     formData.append('file', file);
-
     try {
       const response = await fetch('/extract', {
         method: 'POST',
         headers: { 'X-API-Key': apiKey },
         body: formData
       });
-
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.detail || 'Error processing document');
-      }
-
+      if (!response.ok) throw new Error(result.detail || 'Error processing document');
       currentData = result.data;
       currentFilename = result.filename;
       renderResults(result.data);
@@ -454,33 +563,24 @@
   function renderResults(data) {
     const container = document.getElementById('resultsContent');
     let html = '';
+    if (data.document_type) html += `<div class="doc-type-badge">${data.document_type}</div>`;
+    if (data.summary) html += `<p class="summary-text">${data.summary}</p>`;
 
-    // Document type + summary
-    if (data.document_type) {
-      html += `<div class="doc-type-badge">${data.document_type}</div>`;
-    }
-    if (data.summary) {
-      html += `<p class="summary-text">${data.summary}</p>`;
-    }
-
-    // Key fields
     const kf = data.key_fields || {};
     const kfEntries = Object.entries(kf).filter(([, v]) => v);
     if (kfEntries.length) {
-      html += `<div class="card"><div class="card-title">Key Fields</div>`;
+      html += `<div class="card"><div class="card-title">${t('cardKeyFields')}</div>`;
       kfEntries.forEach(([k, v]) => {
         html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`;
       });
       html += `</div>`;
     }
 
-    // Parties
     const issuer = data.parties?.issuer || {};
     const recipient = data.parties?.recipient || {};
-
     const issuerEntries = Object.entries(issuer).filter(([, v]) => v);
     if (issuerEntries.length) {
-      html += `<div class="card"><div class="card-title">Issuer / From</div>`;
+      html += `<div class="card"><div class="card-title">${t('cardIssuer')}</div>`;
       issuerEntries.forEach(([k, v]) => {
         html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`;
       });
@@ -489,19 +589,18 @@
 
     const recipientEntries = Object.entries(recipient).filter(([, v]) => v);
     if (recipientEntries.length) {
-      html += `<div class="card"><div class="card-title">Recipient / To</div>`;
+      html += `<div class="card"><div class="card-title">${t('cardRecipient')}</div>`;
       recipientEntries.forEach(([k, v]) => {
         html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`;
       });
       html += `</div>`;
     }
 
-    // Line items
     const items = data.line_items || [];
     if (items.length) {
-      html += `<div class="card"><div class="card-title">Line Items</div>
+      html += `<div class="card"><div class="card-title">${t('cardLineItems')}</div>
         <table>
-          <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+          <thead><tr><th>${t('thDesc')}</th><th>${t('thQty')}</th><th>${t('thUnit')}</th><th>${t('thTotal')}</th></tr></thead>
           <tbody>`;
       items.forEach(item => {
         html += `<tr>
@@ -514,11 +613,10 @@
       html += `</tbody></table></div>`;
     }
 
-    // Additional info
     const ai = data.additional_info || {};
     const aiEntries = Object.entries(ai).filter(([, v]) => v);
     if (aiEntries.length) {
-      html += `<div class="card"><div class="card-title">Additional Info</div>`;
+      html += `<div class="card"><div class="card-title">${t('cardAdditional')}</div>`;
       aiEntries.forEach(([k, v]) => {
         html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`;
       });
@@ -536,7 +634,6 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ data: currentData, filename: currentFilename })
       });
-
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -545,7 +642,7 @@
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      showError('Error exporting Excel: ' + err.message);
+      showError(t('errorExport') + err.message);
     }
   }
 
