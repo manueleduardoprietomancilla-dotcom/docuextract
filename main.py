@@ -1,10 +1,15 @@
 import os
 import base64
 import json
-from fastapi import FastAPI, File, UploadFile, HTTPException, Header
+import sqlite3
+import hashlib
+import secrets
+from datetime import datetime, timedelta
+from fastapi import FastAPI, File, UploadFile, HTTPException, Header, Depends
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from typing import Optional
 import anthropic
 import openpyxl
@@ -31,6 +36,11 @@ ALLOWED_TYPES = {
     "image/gif": "gif",
 }
 
+PLANS = {
+    "starter": {"name": "Starter", "limit": 100, "price_cop": 37000, "link": "https://mpago.la/1aAxegd"},
+    "pro": {"name": "Pro", "limit": 300, "price_cop": 78000, "link": "https://mpago.la/1UvoSPg"},
+}
+
 EXTRACTION_PROMPT = """Analyze this document and extract all relevant information.
 
 Return ONLY a valid JSON object with this structure (no markdown, no explanation):
@@ -45,20 +55,20 @@ Return ONLY a valid JSON object with this structure (no markdown, no explanation
     "total_amount": "total amount with currency",
     "subtotal": "subtotal if found",
     "tax": "tax amount if found",
-    "currency": "currency code (USD, EUR, MXN, etc)"
+    "currency": "currency code (USD, EUR, MXN, COP, etc)"
   },
   "parties": {
     "issuer": {
       "name": "company or person name",
       "address": "address if found",
-      "tax_id": "tax ID / RFC / NIF if found",
+      "tax_id": "tax ID / RFC / NIF / NIT if found",
       "email": "email if found",
       "phone": "phone if found"
     },
     "recipient": {
       "name": "company or person name",
       "address": "address if found",
-      "tax_id": "tax ID / RFC / NIF if found"
+      "tax_id": "tax ID / RFC / NIF / NIT if found"
     }
   },
   "line_items": [
@@ -79,20 +89,183 @@ Return ONLY a valid JSON object with this structure (no markdown, no explanation
 If a field is not found, use null. Extract everything visible in the document."""
 
 
+def get_db():
+    db_path = os.environ.get("DB_PATH", "docuextract.db")
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_db():
+    conn = get_db()
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            plan TEXT DEFAULT 'none',
+            docs_used INTEGER DEFAULT 0,
+            docs_reset_date TEXT,
+            token TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+
+init_db()
+
+
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
+
+
+def get_user_by_token(token: str):
+    conn = get_db()
+    user = conn.execute("SELECT * FROM users WHERE token = ?", (token,)).fetchone()
+    conn.close()
+    return user
+
+
+def reset_docs_if_needed(user):
+    if not user["docs_reset_date"]:
+        return
+    reset_date = datetime.fromisoformat(user["docs_reset_date"])
+    if datetime.now() > reset_date:
+        conn = get_db()
+        next_reset = (datetime.now() + timedelta(days=30)).isoformat()
+        conn.execute("UPDATE users SET docs_used = 0, docs_reset_date = ? WHERE id = ?",
+                     (next_reset, user["id"]))
+        conn.commit()
+        conn.close()
+
+
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class ActivateRequest(BaseModel):
+    token: str
+    plan: str
+
+
 @app.get("/")
 async def root():
     return FileResponse("static/index.html")
 
 
+@app.post("/auth/register")
+async def register(req: RegisterRequest):
+    conn = get_db()
+    existing = conn.execute("SELECT id FROM users WHERE email = ?", (req.email,)).fetchone()
+    if existing:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Email already registered")
+    token = secrets.token_hex(32)
+    conn.execute(
+        "INSERT INTO users (email, password_hash, token) VALUES (?, ?, ?)",
+        (req.email, hash_password(req.password), token)
+    )
+    conn.commit()
+    conn.close()
+    return {"success": True, "token": token, "email": req.email, "plan": "none", "docs_used": 0}
+
+
+@app.post("/auth/login")
+async def login(req: LoginRequest):
+    conn = get_db()
+    user = conn.execute(
+        "SELECT * FROM users WHERE email = ? AND password_hash = ?",
+        (req.email, hash_password(req.password))
+    ).fetchone()
+    conn.close()
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    return {
+        "success": True,
+        "token": user["token"],
+        "email": user["email"],
+        "plan": user["plan"],
+        "docs_used": user["docs_used"],
+        "docs_limit": PLANS.get(user["plan"], {}).get("limit", 0)
+    }
+
+
+@app.get("/auth/me")
+async def me(authorization: Optional[str] = Header(None)):
+    token = authorization.replace("Bearer ", "") if authorization else None
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    user = get_user_by_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    reset_docs_if_needed(user)
+    user = get_user_by_token(token)
+    return {
+        "email": user["email"],
+        "plan": user["plan"],
+        "docs_used": user["docs_used"],
+        "docs_limit": PLANS.get(user["plan"], {}).get("limit", 0)
+    }
+
+
+@app.post("/auth/activate")
+async def activate_plan(req: ActivateRequest):
+    if req.plan not in PLANS:
+        raise HTTPException(status_code=400, detail="Invalid plan")
+    user = get_user_by_token(req.token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    conn = get_db()
+    next_reset = (datetime.now() + timedelta(days=30)).isoformat()
+    conn.execute(
+        "UPDATE users SET plan = ?, docs_used = 0, docs_reset_date = ? WHERE token = ?",
+        (req.plan, next_reset, req.token)
+    )
+    conn.commit()
+    conn.close()
+    return {"success": True, "plan": req.plan}
+
+
+@app.get("/plans")
+async def get_plans():
+    return {"plans": PLANS}
+
+
 @app.post("/extract")
-async def extract_document(file: UploadFile = File(...), x_api_key: Optional[str] = Header(None)):
-    api_key = x_api_key or os.environ.get("ANTHROPIC_API_KEY")
+async def extract_document(
+    file: UploadFile = File(...),
+    authorization: Optional[str] = Header(None),
+    x_api_key: Optional[str] = Header(None)
+):
+    token = authorization.replace("Bearer ", "") if authorization else None
+    user = get_user_by_token(token) if token else None
+
+    if user:
+        reset_docs_if_needed(user)
+        user = get_user_by_token(token)
+        if user["plan"] == "none":
+            raise HTTPException(status_code=403, detail="Please subscribe to a plan to process documents.")
+        plan_limit = PLANS[user["plan"]]["limit"]
+        if user["docs_used"] >= plan_limit:
+            raise HTTPException(status_code=403, detail=f"Monthly limit reached ({plan_limit} documents). Please upgrade your plan.")
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+    else:
+        api_key = x_api_key or os.environ.get("ANTHROPIC_API_KEY")
+
     if not api_key:
-        raise HTTPException(status_code=400, detail="API key required. Enter your Anthropic API key in the app.")
+        raise HTTPException(status_code=400, detail="API key required.")
 
     content_type = file.content_type
     if content_type not in ALLOWED_TYPES:
-        raise HTTPException(status_code=400, detail=f"File type not supported. Use PDF, JPG, PNG, WEBP or GIF.")
+        raise HTTPException(status_code=400, detail="File type not supported. Use PDF, JPG, PNG, WEBP or GIF.")
 
     file_bytes = await file.read()
     if len(file_bytes) > 10 * 1024 * 1024:
@@ -107,52 +280,40 @@ async def extract_document(file: UploadFile = File(...), x_api_key: Optional[str
         message = client.messages.create(
             model="claude-sonnet-5",
             max_tokens=4096,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "document",
-                            "source": {
-                                "type": "base64",
-                                "media_type": "application/pdf",
-                                "data": file_b64,
-                            },
-                        },
-                        {"type": "text", "text": EXTRACTION_PROMPT},
-                    ],
-                }
-            ],
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "document", "source": {"type": "base64", "media_type": "application/pdf", "data": file_b64}},
+                    {"type": "text", "text": EXTRACTION_PROMPT}
+                ]
+            }]
         )
     else:
         message = client.messages.create(
             model="claude-sonnet-5",
             max_tokens=4096,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": media_type,
-                                "data": file_b64,
-                            },
-                        },
-                        {"type": "text", "text": EXTRACTION_PROMPT},
-                    ],
-                }
-            ],
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": file_b64}},
+                    {"type": "text", "text": EXTRACTION_PROMPT}
+                ]
+            }]
         )
 
     raw_text = message.content[0].text.strip()
-
     if raw_text.startswith("```"):
         lines = raw_text.split("\n")
         raw_text = "\n".join(lines[1:-1])
 
     extracted = json.loads(raw_text)
+
+    if user:
+        conn = get_db()
+        conn.execute("UPDATE users SET docs_used = docs_used + 1 WHERE token = ?", (token,))
+        conn.commit()
+        conn.close()
+
     return {"success": True, "data": extracted, "filename": file.filename}
 
 
@@ -188,7 +349,6 @@ async def export_excel(data: dict):
         ws.cell(row=row, column=2, value=str(value) if value else "")
 
     current_row = 1
-
     write_header(current_row, f"DocuExtract AI - {filename}")
     current_row += 2
 
@@ -239,8 +399,7 @@ async def export_excel(data: dict):
         current_row += 1
         headers = ["Description", "Quantity", "Unit Price", "Total"]
         for col, h in enumerate(headers, 1):
-            cell = ws.cell(row=current_row, column=col, value=h)
-            cell.font = Font(bold=True)
+            ws.cell(row=current_row, column=col, value=h).font = Font(bold=True)
         current_row += 1
         for item in line_items:
             ws.cell(row=current_row, column=1, value=item.get("description", ""))

@@ -6,684 +6,801 @@
   <title>DocuExtract AI</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0f0f1a;
-      color: #e2e8f0;
-      min-height: 100vh;
-    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f0f1a; color: #e2e8f0; min-height: 100vh; }
 
     header {
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      padding: 20px 40px;
+      padding: 16px 32px;
       border-bottom: 1px solid #2d3748;
       display: flex;
       align-items: center;
       gap: 12px;
     }
-
-    header .logo {
-      font-size: 24px;
-      font-weight: 700;
-      background: linear-gradient(90deg, #4fc3f7, #a78bfa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    header .tagline {
-      font-size: 13px;
-      color: #718096;
-      margin-left: auto;
-      margin-right: 14px;
-    }
-
-    .lang-switcher {
-      display: flex;
-      gap: 4px;
-      background: #0f0f1a;
-      border-radius: 8px;
-      padding: 4px;
-    }
-
-    .lang-btn {
-      background: transparent;
-      border: none;
-      color: #718096;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .lang-btn.active {
-      background: #4fc3f7;
-      color: #0f0f1a;
-    }
-
+    .logo { font-size: 22px; font-weight: 700; background: linear-gradient(90deg, #4fc3f7, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .lang-switcher { display: flex; gap: 4px; background: #0f0f1a; border-radius: 8px; padding: 4px; }
+    .lang-btn { background: transparent; border: none; color: #718096; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .lang-btn.active { background: #4fc3f7; color: #0f0f1a; }
     .lang-btn:hover:not(.active) { color: #e2e8f0; }
+    .nav-btn { background: transparent; border: 1px solid #4fc3f7; color: #4fc3f7; padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .nav-btn:hover { background: #4fc3f720; }
+    .nav-btn.primary { background: #4fc3f7; color: #0f0f1a; border-color: #4fc3f7; }
+    .nav-btn.primary:hover { opacity: 0.85; }
+    .user-info { font-size: 13px; color: #a0aec0; }
 
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 40px 20px;
-    }
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 20px; }
 
-    .hero {
-      text-align: center;
-      margin-bottom: 40px;
-    }
+    /* PAGES */
+    .page { display: none; }
+    .page.active { display: block; }
 
-    .hero h1 {
-      font-size: 36px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      background: linear-gradient(90deg, #4fc3f7, #a78bfa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+    /* HERO */
+    .hero { text-align: center; margin-bottom: 48px; }
+    .hero h1 { font-size: 40px; font-weight: 700; margin-bottom: 14px; background: linear-gradient(90deg, #4fc3f7, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.2; }
+    .hero p { color: #718096; font-size: 17px; max-width: 600px; margin: 0 auto 28px; }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-hero-primary { background: linear-gradient(135deg, #4fc3f7, #a78bfa); color: #0f0f1a; border: none; border-radius: 10px; padding: 14px 32px; font-weight: 700; font-size: 16px; cursor: pointer; transition: opacity 0.2s; }
+    .btn-hero-primary:hover { opacity: 0.85; }
+    .btn-hero-secondary { background: transparent; color: #4fc3f7; border: 1px solid #4fc3f7; border-radius: 10px; padding: 14px 32px; font-weight: 600; font-size: 16px; cursor: pointer; transition: all 0.2s; }
+    .btn-hero-secondary:hover { background: #4fc3f720; }
 
-    .hero p { color: #718096; font-size: 16px; }
+    /* PRICING */
+    .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px; }
+    @media(max-width:600px) { .pricing-grid { grid-template-columns: 1fr; } }
+    .pricing-card { background: #1a1a2e; border: 1px solid #2d3748; border-radius: 16px; padding: 32px; text-align: center; transition: border-color 0.2s; }
+    .pricing-card.featured { border-color: #a78bfa; position: relative; }
+    .pricing-card.featured::before { content: 'POPULAR'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #a78bfa; color: #0f0f1a; font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 20px; }
+    .pricing-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .pricing-price { font-size: 42px; font-weight: 700; color: #4fc3f7; margin: 16px 0 4px; }
+    .pricing-price span { font-size: 16px; color: #718096; }
+    .pricing-usd { font-size: 13px; color: #718096; margin-bottom: 20px; }
+    .pricing-features { list-style: none; margin-bottom: 28px; }
+    .pricing-features li { padding: 8px 0; font-size: 14px; color: #a0aec0; border-bottom: 1px solid #2d374830; }
+    .pricing-features li:last-child { border-bottom: none; }
+    .pricing-features li::before { content: '✓ '; color: #4fc3f7; font-weight: 700; }
+    .btn-plan { width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; transition: opacity 0.2s; border: none; }
+    .btn-plan.starter { background: #4fc3f7; color: #0f0f1a; }
+    .btn-plan.pro { background: linear-gradient(135deg, #4fc3f7, #a78bfa); color: #0f0f1a; }
+    .btn-plan:hover { opacity: 0.85; }
 
-    .api-key-section {
-      background: #1a1a2e;
-      border: 1px solid #2d3748;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 24px;
-    }
+    /* AUTH */
+    .auth-card { max-width: 420px; margin: 0 auto; background: #1a1a2e; border: 1px solid #2d3748; border-radius: 16px; padding: 36px; }
+    .auth-card h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; text-align: center; }
+    .auth-card p { color: #718096; text-align: center; margin-bottom: 28px; font-size: 14px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; color: #a78bfa; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group input { width: 100%; background: #0f0f1a; border: 1px solid #2d3748; border-radius: 8px; padding: 11px 14px; color: #e2e8f0; font-size: 14px; }
+    .form-group input:focus { outline: none; border-color: #4fc3f7; }
+    .btn-auth { width: 100%; background: linear-gradient(135deg, #4fc3f7, #a78bfa); color: #0f0f1a; border: none; border-radius: 10px; padding: 12px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px; transition: opacity 0.2s; }
+    .btn-auth:hover { opacity: 0.85; }
+    .auth-switch { text-align: center; margin-top: 20px; font-size: 14px; color: #718096; }
+    .auth-switch a { color: #4fc3f7; cursor: pointer; text-decoration: none; }
+    .auth-switch a:hover { text-decoration: underline; }
 
-    .api-key-section label {
-      display: block;
-      font-size: 13px;
-      color: #a78bfa;
-      font-weight: 600;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+    /* APP */
+    .app-stats { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat-card { background: #1a1a2e; border: 1px solid #2d3748; border-radius: 12px; padding: 16px 24px; flex: 1; min-width: 160px; }
+    .stat-label { font-size: 12px; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .stat-value { font-size: 24px; font-weight: 700; color: #4fc3f7; }
+    .stat-sub { font-size: 12px; color: #718096; }
+    .progress-bar { background: #2d3748; border-radius: 4px; height: 6px; margin-top: 8px; overflow: hidden; }
+    .progress-fill { background: linear-gradient(90deg, #4fc3f7, #a78bfa); height: 100%; border-radius: 4px; transition: width 0.3s; }
 
-    .api-key-row { display: flex; gap: 10px; }
-
-    .api-key-row input {
-      flex: 1;
-      background: #0f0f1a;
-      border: 1px solid #2d3748;
-      border-radius: 8px;
-      padding: 10px 14px;
-      color: #e2e8f0;
-      font-size: 14px;
-      font-family: monospace;
-    }
-
-    .api-key-row input:focus { outline: none; border-color: #4fc3f7; }
-
-    .btn-save {
-      background: #4fc3f7;
-      color: #0f0f1a;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 20px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 14px;
-      transition: opacity 0.2s;
-    }
-
-    .btn-save:hover { opacity: 0.85; }
-
-    .upload-area {
-      background: #1a1a2e;
-      border: 2px dashed #2d3748;
-      border-radius: 16px;
-      padding: 60px 40px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s;
-      margin-bottom: 24px;
-    }
-
-    .upload-area:hover, .upload-area.dragover {
-      border-color: #4fc3f7;
-      background: #1e2a3a;
-    }
-
+    .upload-area { background: #1a1a2e; border: 2px dashed #2d3748; border-radius: 16px; padding: 60px 40px; text-align: center; cursor: pointer; transition: all 0.3s; margin-bottom: 24px; }
+    .upload-area:hover, .upload-area.dragover { border-color: #4fc3f7; background: #1e2a3a; }
     .upload-icon { font-size: 48px; margin-bottom: 16px; }
     .upload-area h2 { font-size: 20px; margin-bottom: 8px; color: #e2e8f0; }
     .upload-area p { color: #718096; font-size: 14px; }
-
-    .upload-area .formats {
-      margin-top: 12px;
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .badge {
-      background: #2d3748;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      color: #a0aec0;
-    }
-
+    .formats { margin-top: 12px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .badge { background: #2d3748; padding: 4px 10px; border-radius: 20px; font-size: 12px; color: #a0aec0; }
     #fileInput { display: none; }
 
-    .processing {
-      display: none;
-      text-align: center;
-      padding: 40px;
-      background: #1a1a2e;
-      border-radius: 16px;
-      margin-bottom: 24px;
-    }
-
-    .spinner {
-      width: 48px;
-      height: 48px;
-      border: 3px solid #2d3748;
-      border-top-color: #4fc3f7;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
-    }
-
+    .processing { display: none; text-align: center; padding: 40px; background: #1a1a2e; border-radius: 16px; margin-bottom: 24px; }
+    .spinner { width: 48px; height: 48px; border: 3px solid #2d3748; border-top-color: #4fc3f7; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .results { display: none; }
-
-    .results-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-    }
-
+    .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
     .results-header h2 { font-size: 20px; font-weight: 600; }
-
-    .btn-export {
-      background: linear-gradient(135deg, #4fc3f7, #a78bfa);
-      color: #0f0f1a;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 24px;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 14px;
-      transition: opacity 0.2s;
-    }
-
+    .btn-export { background: linear-gradient(135deg, #4fc3f7, #a78bfa); color: #0f0f1a; border: none; border-radius: 8px; padding: 10px 24px; font-weight: 700; cursor: pointer; font-size: 14px; transition: opacity 0.2s; }
     .btn-export:hover { opacity: 0.85; }
-
-    .btn-new {
-      background: transparent;
-      color: #4fc3f7;
-      border: 1px solid #4fc3f7;
-      border-radius: 8px;
-      padding: 10px 20px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 14px;
-      margin-right: 10px;
-      transition: all 0.2s;
-    }
-
+    .btn-new { background: transparent; color: #4fc3f7; border: 1px solid #4fc3f7; border-radius: 8px; padding: 10px 20px; font-weight: 600; cursor: pointer; font-size: 14px; margin-right: 10px; transition: all 0.2s; }
     .btn-new:hover { background: #4fc3f720; }
 
-    .card {
-      background: #1a1a2e;
-      border: 1px solid #2d3748;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 16px;
-    }
-
-    .card-title {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #4fc3f7;
-      margin-bottom: 14px;
-    }
-
-    .field-row {
-      display: flex;
-      gap: 12px;
-      padding: 8px 0;
-      border-bottom: 1px solid #2d374830;
-    }
-
+    .card { background: #1a1a2e; border: 1px solid #2d3748; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4fc3f7; margin-bottom: 14px; }
+    .field-row { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid #2d374830; }
     .field-row:last-child { border-bottom: none; }
-
-    .field-label {
-      min-width: 160px;
-      font-size: 13px;
-      color: #718096;
-      font-weight: 500;
-    }
-
+    .field-label { min-width: 160px; font-size: 13px; color: #718096; font-weight: 500; }
     .field-value { font-size: 13px; color: #e2e8f0; flex: 1; }
-
-    .doc-type-badge {
-      display: inline-block;
-      background: linear-gradient(135deg, #4fc3f720, #a78bfa20);
-      border: 1px solid #4fc3f740;
-      color: #4fc3f7;
-      padding: 4px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 12px;
-    }
-
+    .doc-type-badge { display: inline-block; background: linear-gradient(135deg, #4fc3f720, #a78bfa20); border: 1px solid #4fc3f740; color: #4fc3f7; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-
-    th {
-      text-align: left;
-      padding: 8px 12px;
-      background: #16213e;
-      color: #a78bfa;
-      font-weight: 600;
-      font-size: 12px;
-      text-transform: uppercase;
-    }
-
-    td {
-      padding: 8px 12px;
-      border-bottom: 1px solid #2d374840;
-      color: #e2e8f0;
-    }
-
+    th { text-align: left; padding: 8px 12px; background: #16213e; color: #a78bfa; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+    td { padding: 8px 12px; border-bottom: 1px solid #2d374840; color: #e2e8f0; }
     tr:last-child td { border-bottom: none; }
+    .summary-text { color: #a0aec0; font-size: 14px; font-style: italic; margin-bottom: 12px; }
 
-    .error-msg {
-      background: #2d1515;
-      border: 1px solid #c53030;
-      color: #fc8181;
-      padding: 14px 18px;
-      border-radius: 10px;
-      font-size: 14px;
-      margin-bottom: 16px;
-      display: none;
-    }
+    .error-msg { background: #2d1515; border: 1px solid #c53030; color: #fc8181; padding: 14px 18px; border-radius: 10px; font-size: 14px; margin-bottom: 16px; display: none; }
+    .success-msg { background: #153015; border: 1px solid #276627; color: #68d391; padding: 14px 18px; border-radius: 10px; font-size: 14px; margin-bottom: 16px; display: none; }
 
-    .summary-text {
-      color: #a0aec0;
-      font-size: 14px;
-      font-style: italic;
-      margin-bottom: 12px;
-    }
+    .section-title { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 8px; }
+    .section-sub { text-align: center; color: #718096; font-size: 15px; margin-bottom: 32px; }
+
+    .upgrade-banner { background: linear-gradient(135deg, #1a1a2e, #16213e); border: 1px solid #a78bfa40; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .upgrade-banner p { color: #a0aec0; font-size: 14px; }
+    .upgrade-banner strong { color: #a78bfa; }
+    .btn-upgrade { background: linear-gradient(135deg, #4fc3f7, #a78bfa); color: #0f0f1a; border: none; border-radius: 8px; padding: 10px 20px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
   </style>
 </head>
 <body>
 
 <header>
   <div class="logo">⚡ DocuExtract AI</div>
-  <div class="tagline" id="tagline">Powered by Claude AI</div>
-  <div class="lang-switcher">
-    <button class="lang-btn active" onclick="setLang('en')">EN</button>
-    <button class="lang-btn" onclick="setLang('es')">ES</button>
-    <button class="lang-btn" onclick="setLang('pt')">PT</button>
-    <button class="lang-btn" onclick="setLang('fr')">FR</button>
+  <div class="header-right">
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('es')">ES</button>
+      <button class="lang-btn" onclick="setLang('pt')">PT</button>
+      <button class="lang-btn" onclick="setLang('fr')">FR</button>
+    </div>
+    <div id="headerAuth">
+      <button class="nav-btn" onclick="showPage('login')" id="btnHeaderLogin">Login</button>
+      <button class="nav-btn primary" onclick="showPage('register')" id="btnHeaderRegister">Sign Up</button>
+    </div>
+    <div id="headerUser" style="display:none; align-items:center; gap:10px;">
+      <span class="user-info" id="userEmail"></span>
+      <button class="nav-btn" onclick="showPage('pricing')" id="btnUpgrade" style="display:none">⬆ Upgrade</button>
+      <button class="nav-btn" onclick="logout()">Logout</button>
+    </div>
   </div>
 </header>
 
-<div class="container">
-
-  <div class="hero">
-    <h1 id="heroTitle">Extract data from any document</h1>
-    <p id="heroSubtitle">Upload invoices, contracts, receipts or any business document — AI extracts all relevant data instantly</p>
-  </div>
-
-  <div class="api-key-section">
-    <label id="apiKeyLabel">Anthropic API Key</label>
-    <div class="api-key-row">
-      <input type="password" id="apiKeyInput" placeholder="sk-ant-..." />
-      <button class="btn-save" id="btnSave" onclick="saveApiKey()">Save</button>
-    </div>
-  </div>
-
-  <div class="error-msg" id="errorMsg"></div>
-
-  <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-    <div class="upload-icon">📄</div>
-    <h2 id="uploadTitle">Drop your document here</h2>
-    <p id="uploadSubtitle">or click to browse files</p>
-    <div class="formats">
-      <span class="badge">PDF</span>
-      <span class="badge">JPG</span>
-      <span class="badge">PNG</span>
-      <span class="badge">WEBP</span>
-    </div>
-    <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif" />
-  </div>
-
-  <div class="processing" id="processing">
-    <div class="spinner"></div>
-    <p id="processingText" style="color:#718096;">AI is analyzing your document...</p>
-  </div>
-
-  <div class="results" id="results">
-    <div class="results-header">
-      <h2 id="resultsTitle">Extracted Data</h2>
-      <div>
-        <button class="btn-new" id="btnNew" onclick="resetApp()">+ New Document</button>
-        <button class="btn-export" id="btnExport" onclick="exportExcel()">⬇ Export Excel</button>
+<!-- HOME PAGE -->
+<div id="page-home" class="page active">
+  <div class="container">
+    <div class="hero">
+      <h1 id="heroTitle">Extract data from<br>any document</h1>
+      <p id="heroSubtitle">Upload invoices, contracts, receipts or any business document — AI extracts all relevant data instantly</p>
+      <div class="hero-btns">
+        <button class="btn-hero-primary" onclick="showPage('register')" id="btnGetStarted">Get Started Free</button>
+        <button class="btn-hero-secondary" onclick="showPage('pricing')" id="btnSeePricing">See Pricing</button>
       </div>
     </div>
-    <div id="resultsContent"></div>
-  </div>
 
+    <div style="text-align:center; margin-bottom: 48px;">
+      <div style="display:flex; gap:32px; justify-content:center; flex-wrap:wrap;">
+        <div style="text-align:center;">
+          <div style="font-size:32px; font-weight:700; color:#4fc3f7;">PDF</div>
+          <div style="font-size:13px; color:#718096;" id="feat1">Invoices & Contracts</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:32px; font-weight:700; color:#a78bfa;">AI</div>
+          <div style="font-size:13px; color:#718096;" id="feat2">Smart Extraction</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:32px; font-weight:700; color:#4fc3f7;">XLS</div>
+          <div style="font-size:13px; color:#718096;" id="feat3">Export to Excel</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:32px; font-weight:700; color:#a78bfa;">🌍</div>
+          <div style="font-size:13px; color:#718096;" id="feat4">Any Language</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing preview on home -->
+    <div class="section-title" id="pricingTitle">Simple Pricing</div>
+    <div class="section-sub" id="pricingSub">Start today, cancel anytime</div>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <h3 id="starterName">Starter</h3>
+        <div class="pricing-price">$37.000<span id="perMonth">/mo</span></div>
+        <div class="pricing-usd" id="starterUsd">~$9 USD</div>
+        <ul class="pricing-features">
+          <li id="sf1">100 documents/month</li>
+          <li id="sf2">PDF, JPG, PNG support</li>
+          <li id="sf3">Excel export</li>
+          <li id="sf4">EN, ES, PT, FR interface</li>
+        </ul>
+        <button class="btn-plan starter" onclick="subscribePlan('starter')" id="btnStarter">Get Starter</button>
+      </div>
+      <div class="pricing-card featured">
+        <h3 id="proName">Pro</h3>
+        <div class="pricing-price">$78.000<span>/mo</span></div>
+        <div class="pricing-usd" id="proUsd">~$19 USD</div>
+        <ul class="pricing-features">
+          <li id="pf1">300 documents/month</li>
+          <li id="pf2">PDF, JPG, PNG support</li>
+          <li id="pf3">Excel export</li>
+          <li id="pf4">Priority support</li>
+        </ul>
+        <button class="btn-plan pro" onclick="subscribePlan('pro')" id="btnPro">Get Pro</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING PAGE -->
+<div id="page-pricing" class="page">
+  <div class="container">
+    <div class="section-title" id="pricingTitle2">Choose your plan</div>
+    <div class="section-sub" id="pricingSub2">Start today, cancel anytime</div>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <h3>Starter</h3>
+        <div class="pricing-price">$37.000<span id="perMonth2">/mo</span></div>
+        <div class="pricing-usd">~$9 USD</div>
+        <ul class="pricing-features">
+          <li id="sf1b">100 documents/month</li>
+          <li id="sf2b">PDF, JPG, PNG support</li>
+          <li id="sf3b">Excel export</li>
+          <li id="sf4b">EN, ES, PT, FR interface</li>
+        </ul>
+        <button class="btn-plan starter" onclick="subscribePlan('starter')" id="btnStarter2">Get Starter</button>
+      </div>
+      <div class="pricing-card featured">
+        <h3>Pro</h3>
+        <div class="pricing-price">$78.000<span>/mo</span></div>
+        <div class="pricing-usd">~$19 USD</div>
+        <ul class="pricing-features">
+          <li id="pf1b">300 documents/month</li>
+          <li id="pf2b">PDF, JPG, PNG support</li>
+          <li id="pf3b">Excel export</li>
+          <li id="pf4b">Priority support</li>
+        </ul>
+        <button class="btn-plan pro" onclick="subscribePlan('pro')" id="btnPro2">Get Pro</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN PAGE -->
+<div id="page-login" class="page">
+  <div class="container">
+    <div class="auth-card">
+      <h2 id="loginTitle">Welcome back</h2>
+      <p id="loginSub">Sign in to your account</p>
+      <div class="error-msg" id="loginError"></div>
+      <div class="form-group">
+        <label id="labelEmail">Email</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label id="labelPassword">Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" />
+      </div>
+      <button class="btn-auth" onclick="doLogin()" id="btnLogin">Sign In</button>
+      <div class="auth-switch" id="loginSwitch">Don't have an account? <a onclick="showPage('register')" id="goRegister">Sign up</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER PAGE -->
+<div id="page-register" class="page">
+  <div class="container">
+    <div class="auth-card">
+      <h2 id="registerTitle">Create account</h2>
+      <p id="registerSub">Start extracting documents today</p>
+      <div class="error-msg" id="registerError"></div>
+      <div class="success-msg" id="registerSuccess"></div>
+      <div class="form-group">
+        <label id="labelEmailR">Email</label>
+        <input type="email" id="registerEmail" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label id="labelPasswordR">Password</label>
+        <input type="password" id="registerPassword" placeholder="••••••••" />
+      </div>
+      <button class="btn-auth" onclick="doRegister()" id="btnRegister">Create Account</button>
+      <div class="auth-switch" id="registerSwitch">Already have an account? <a onclick="showPage('login')" id="goLogin">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP PAGE -->
+<div id="page-app" class="page">
+  <div class="container">
+
+    <div id="upgradeBanner" class="upgrade-banner" style="display:none">
+      <p id="upgradeText"><strong>Free plan:</strong> Subscribe to start processing documents.</p>
+      <button class="btn-upgrade" onclick="showPage('pricing')" id="btnUpgradeBanner">Choose a Plan</button>
+    </div>
+
+    <div class="app-stats">
+      <div class="stat-card">
+        <div class="stat-label" id="statPlanLabel">Plan</div>
+        <div class="stat-value" id="statPlan">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" id="statUsedLabel">Used this month</div>
+        <div class="stat-value"><span id="statUsed">0</span> / <span id="statLimit">0</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="error-msg" id="appError"></div>
+
+    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">📄</div>
+      <h2 id="uploadTitle">Drop your document here</h2>
+      <p id="uploadSubtitle">or click to browse files</p>
+      <div class="formats">
+        <span class="badge">PDF</span><span class="badge">JPG</span><span class="badge">PNG</span><span class="badge">WEBP</span>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif" />
+    </div>
+
+    <div class="processing" id="processing">
+      <div class="spinner"></div>
+      <p id="processingText" style="color:#718096;">AI is analyzing your document...</p>
+    </div>
+
+    <div class="results" id="results">
+      <div class="results-header">
+        <h2 id="resultsTitle">Extracted Data</h2>
+        <div>
+          <button class="btn-new" id="btnNew" onclick="resetApp()">+ New Document</button>
+          <button class="btn-export" id="btnExport" onclick="exportExcel()">⬇ Export Excel</button>
+        </div>
+      </div>
+      <div id="resultsContent"></div>
+    </div>
+
+  </div>
 </div>
 
 <script>
-  const TRANSLATIONS = {
-    en: {
-      tagline: 'Powered by Claude AI',
-      heroTitle: 'Extract data from any document',
-      heroSubtitle: 'Upload invoices, contracts, receipts or any business document — AI extracts all relevant data instantly',
-      apiKeyLabel: 'Anthropic API Key',
-      btnSave: 'Save',
-      uploadTitle: 'Drop your document here',
-      uploadSubtitle: 'or click to browse files',
-      processingText: 'AI is analyzing your document...',
-      resultsTitle: 'Extracted Data',
-      btnNew: '+ New Document',
-      btnExport: '⬇ Export Excel',
-      alertNoKey: 'Please enter your API key',
-      alertKeySaved: 'API key saved!',
-      alertNoKeyUpload: 'Please enter your Anthropic API key first.',
-      errorExport: 'Error exporting Excel: ',
-      cardKeyFields: 'Key Fields',
-      cardIssuer: 'Issuer / From',
-      cardRecipient: 'Recipient / To',
-      cardLineItems: 'Line Items',
-      cardAdditional: 'Additional Info',
-      thDesc: 'Description', thQty: 'Qty', thUnit: 'Unit Price', thTotal: 'Total',
-    },
-    es: {
-      tagline: 'Impulsado por Claude AI',
-      heroTitle: 'Extrae datos de cualquier documento',
-      heroSubtitle: 'Sube facturas, contratos, recibos o cualquier documento de negocio — la IA extrae todos los datos al instante',
-      apiKeyLabel: 'Clave API de Anthropic',
-      btnSave: 'Guardar',
-      uploadTitle: 'Arrastra tu documento aquí',
-      uploadSubtitle: 'o haz clic para buscar archivos',
-      processingText: 'La IA está analizando tu documento...',
-      resultsTitle: 'Datos Extraídos',
-      btnNew: '+ Nuevo Documento',
-      btnExport: '⬇ Exportar Excel',
-      alertNoKey: 'Por favor ingresa tu clave API',
-      alertKeySaved: '¡Clave API guardada!',
-      alertNoKeyUpload: 'Por favor ingresa tu clave API de Anthropic primero.',
-      errorExport: 'Error al exportar Excel: ',
-      cardKeyFields: 'Campos Clave',
-      cardIssuer: 'Emisor / De',
-      cardRecipient: 'Receptor / Para',
-      cardLineItems: 'Artículos',
-      cardAdditional: 'Info Adicional',
-      thDesc: 'Descripción', thQty: 'Cant.', thUnit: 'Precio Unit.', thTotal: 'Total',
-    },
-    pt: {
-      tagline: 'Desenvolvido por Claude AI',
-      heroTitle: 'Extraia dados de qualquer documento',
-      heroSubtitle: 'Carregue faturas, contratos, recibos ou qualquer documento comercial — a IA extrai todos os dados instantaneamente',
-      apiKeyLabel: 'Chave API da Anthropic',
-      btnSave: 'Salvar',
-      uploadTitle: 'Arraste seu documento aqui',
-      uploadSubtitle: 'ou clique para procurar arquivos',
-      processingText: 'A IA está analisando seu documento...',
-      resultsTitle: 'Dados Extraídos',
-      btnNew: '+ Novo Documento',
-      btnExport: '⬇ Exportar Excel',
-      alertNoKey: 'Por favor insira sua chave API',
-      alertKeySaved: 'Chave API salva!',
-      alertNoKeyUpload: 'Por favor insira sua chave API da Anthropic primeiro.',
-      errorExport: 'Erro ao exportar Excel: ',
-      cardKeyFields: 'Campos Chave',
-      cardIssuer: 'Emissor / De',
-      cardRecipient: 'Destinatário / Para',
-      cardLineItems: 'Itens',
-      cardAdditional: 'Info Adicional',
-      thDesc: 'Descrição', thQty: 'Qtd.', thUnit: 'Preço Unit.', thTotal: 'Total',
-    },
-    fr: {
-      tagline: 'Propulsé par Claude AI',
-      heroTitle: 'Extrayez les données de n\'importe quel document',
-      heroSubtitle: 'Téléchargez des factures, contrats, reçus ou tout document commercial — l\'IA extrait toutes les données instantanément',
-      apiKeyLabel: 'Clé API Anthropic',
-      btnSave: 'Sauvegarder',
-      uploadTitle: 'Déposez votre document ici',
-      uploadSubtitle: 'ou cliquez pour parcourir les fichiers',
-      processingText: 'L\'IA analyse votre document...',
-      resultsTitle: 'Données Extraites',
-      btnNew: '+ Nouveau Document',
-      btnExport: '⬇ Exporter Excel',
-      alertNoKey: 'Veuillez entrer votre clé API',
-      alertKeySaved: 'Clé API sauvegardée!',
-      alertNoKeyUpload: 'Veuillez d\'abord entrer votre clé API Anthropic.',
-      errorExport: 'Erreur lors de l\'export Excel: ',
-      cardKeyFields: 'Champs Clés',
-      cardIssuer: 'Émetteur / De',
-      cardRecipient: 'Destinataire / À',
-      cardLineItems: 'Articles',
-      cardAdditional: 'Info Supplémentaire',
-      thDesc: 'Description', thQty: 'Qté', thUnit: 'Prix Unit.', thTotal: 'Total',
-    }
-  };
+const TRANSLATIONS = {
+  en: {
+    heroTitle: 'Extract data from<br>any document',
+    heroSubtitle: 'Upload invoices, contracts, receipts or any business document — AI extracts all relevant data instantly',
+    btnGetStarted: 'Get Started Free', btnSeePricing: 'See Pricing',
+    feat1: 'Invoices & Contracts', feat2: 'Smart Extraction', feat3: 'Export to Excel', feat4: 'Any Language',
+    pricingTitle: 'Simple Pricing', pricingSub: 'Start today, cancel anytime',
+    pricingTitle2: 'Choose your plan', pricingSub2: 'Start today, cancel anytime',
+    perMonth: '/mo', perMonth2: '/mo',
+    starterName: 'Starter', proName: 'Pro',
+    starterUsd: '~$9 USD', proUsd: '~$19 USD',
+    sf1: '100 documents/month', sf2: 'PDF, JPG, PNG support', sf3: 'Excel export', sf4: 'EN, ES, PT, FR interface',
+    pf1: '300 documents/month', pf2: 'PDF, JPG, PNG support', pf3: 'Excel export', pf4: 'Priority support',
+    sf1b: '100 documents/month', sf2b: 'PDF, JPG, PNG support', sf3b: 'Excel export', sf4b: 'EN, ES, PT, FR interface',
+    pf1b: '300 documents/month', pf2b: 'PDF, JPG, PNG support', pf3b: 'Excel export', pf4b: 'Priority support',
+    btnStarter: 'Get Starter', btnPro: 'Get Pro', btnStarter2: 'Get Starter', btnPro2: 'Get Pro',
+    loginTitle: 'Welcome back', loginSub: 'Sign in to your account',
+    registerTitle: 'Create account', registerSub: 'Start extracting documents today',
+    labelEmail: 'Email', labelPassword: 'Password', labelEmailR: 'Email', labelPasswordR: 'Password',
+    btnLogin: 'Sign In', btnRegister: 'Create Account',
+    loginSwitch: "Don't have an account?", goRegister: 'Sign up',
+    registerSwitch: 'Already have an account?', goLogin: 'Sign in',
+    btnHeaderLogin: 'Login', btnHeaderRegister: 'Sign Up',
+    statPlanLabel: 'Plan', statUsedLabel: 'Used this month',
+    uploadTitle: 'Drop your document here', uploadSubtitle: 'or click to browse files',
+    processingText: 'AI is analyzing your document...',
+    resultsTitle: 'Extracted Data', btnNew: '+ New Document', btnExport: '⬇ Export Excel',
+    upgradeText: '<strong>Free plan:</strong> Subscribe to start processing documents.',
+    btnUpgradeBanner: 'Choose a Plan', btnUpgrade: '⬆ Upgrade',
+    cardKeyFields: 'Key Fields', cardIssuer: 'Issuer / From', cardRecipient: 'Recipient / To',
+    cardLineItems: 'Line Items', cardAdditional: 'Additional Info',
+    thDesc: 'Description', thQty: 'Qty', thUnit: 'Unit Price', thTotal: 'Total',
+    errLogin: 'Invalid email or password', errRegister: 'Registration failed',
+    successRegister: 'Account created! You can now sign in.',
+    errNoFile: 'Please upload a file', errLimit: 'Monthly limit reached. Please upgrade.',
+  },
+  es: {
+    heroTitle: 'Extrae datos de<br>cualquier documento',
+    heroSubtitle: 'Sube facturas, contratos, recibos o cualquier documento de negocio — la IA extrae todos los datos al instante',
+    btnGetStarted: 'Comenzar Gratis', btnSeePricing: 'Ver Precios',
+    feat1: 'Facturas y Contratos', feat2: 'Extracción Inteligente', feat3: 'Exportar a Excel', feat4: 'Cualquier Idioma',
+    pricingTitle: 'Precios Simples', pricingSub: 'Empieza hoy, cancela cuando quieras',
+    pricingTitle2: 'Elige tu plan', pricingSub2: 'Empieza hoy, cancela cuando quieras',
+    perMonth: '/mes', perMonth2: '/mes',
+    starterName: 'Básico', proName: 'Pro',
+    starterUsd: '~$9 USD', proUsd: '~$19 USD',
+    sf1: '100 documentos/mes', sf2: 'Soporte PDF, JPG, PNG', sf3: 'Exportar Excel', sf4: 'Interfaz EN, ES, PT, FR',
+    pf1: '300 documentos/mes', pf2: 'Soporte PDF, JPG, PNG', pf3: 'Exportar Excel', pf4: 'Soporte prioritario',
+    sf1b: '100 documentos/mes', sf2b: 'Soporte PDF, JPG, PNG', sf3b: 'Exportar Excel', sf4b: 'Interfaz EN, ES, PT, FR',
+    pf1b: '300 documentos/mes', pf2b: 'Soporte PDF, JPG, PNG', pf3b: 'Exportar Excel', pf4b: 'Soporte prioritario',
+    btnStarter: 'Obtener Básico', btnPro: 'Obtener Pro', btnStarter2: 'Obtener Básico', btnPro2: 'Obtener Pro',
+    loginTitle: 'Bienvenido', loginSub: 'Inicia sesión en tu cuenta',
+    registerTitle: 'Crear cuenta', registerSub: 'Comienza a extraer documentos hoy',
+    labelEmail: 'Correo', labelPassword: 'Contraseña', labelEmailR: 'Correo', labelPasswordR: 'Contraseña',
+    btnLogin: 'Iniciar Sesión', btnRegister: 'Crear Cuenta',
+    loginSwitch: '¿No tienes cuenta?', goRegister: 'Regístrate',
+    registerSwitch: '¿Ya tienes cuenta?', goLogin: 'Inicia sesión',
+    btnHeaderLogin: 'Entrar', btnHeaderRegister: 'Registrarse',
+    statPlanLabel: 'Plan', statUsedLabel: 'Usado este mes',
+    uploadTitle: 'Arrastra tu documento aquí', uploadSubtitle: 'o haz clic para buscar archivos',
+    processingText: 'La IA está analizando tu documento...',
+    resultsTitle: 'Datos Extraídos', btnNew: '+ Nuevo Documento', btnExport: '⬇ Exportar Excel',
+    upgradeText: '<strong>Plan gratuito:</strong> Suscríbete para procesar documentos.',
+    btnUpgradeBanner: 'Elegir Plan', btnUpgrade: '⬆ Mejorar Plan',
+    cardKeyFields: 'Campos Clave', cardIssuer: 'Emisor / De', cardRecipient: 'Receptor / Para',
+    cardLineItems: 'Artículos', cardAdditional: 'Info Adicional',
+    thDesc: 'Descripción', thQty: 'Cant.', thUnit: 'Precio Unit.', thTotal: 'Total',
+    errLogin: 'Email o contraseña incorrectos', errRegister: 'Error al registrarse',
+    successRegister: '¡Cuenta creada! Ya puedes iniciar sesión.',
+    errNoFile: 'Por favor sube un archivo', errLimit: 'Límite mensual alcanzado. Por favor mejora tu plan.',
+  },
+  pt: {
+    heroTitle: 'Extraia dados de<br>qualquer documento',
+    heroSubtitle: 'Carregue faturas, contratos, recibos ou qualquer documento comercial — a IA extrai todos os dados instantaneamente',
+    btnGetStarted: 'Começar Grátis', btnSeePricing: 'Ver Preços',
+    feat1: 'Faturas e Contratos', feat2: 'Extração Inteligente', feat3: 'Exportar para Excel', feat4: 'Qualquer Idioma',
+    pricingTitle: 'Preços Simples', pricingSub: 'Comece hoje, cancele quando quiser',
+    pricingTitle2: 'Escolha seu plano', pricingSub2: 'Comece hoje, cancele quando quiser',
+    perMonth: '/mês', perMonth2: '/mês',
+    starterName: 'Básico', proName: 'Pro',
+    starterUsd: '~$9 USD', proUsd: '~$19 USD',
+    sf1: '100 documentos/mês', sf2: 'Suporte PDF, JPG, PNG', sf3: 'Exportar Excel', sf4: 'Interface EN, ES, PT, FR',
+    pf1: '300 documentos/mês', pf2: 'Suporte PDF, JPG, PNG', pf3: 'Exportar Excel', pf4: 'Suporte prioritário',
+    sf1b: '100 documentos/mês', sf2b: 'Suporte PDF, JPG, PNG', sf3b: 'Exportar Excel', sf4b: 'Interface EN, ES, PT, FR',
+    pf1b: '300 documentos/mês', pf2b: 'Suporte PDF, JPG, PNG', pf3b: 'Exportar Excel', pf4b: 'Suporte prioritário',
+    btnStarter: 'Obter Básico', btnPro: 'Obter Pro', btnStarter2: 'Obter Básico', btnPro2: 'Obter Pro',
+    loginTitle: 'Bem-vindo', loginSub: 'Entre na sua conta',
+    registerTitle: 'Criar conta', registerSub: 'Comece a extrair documentos hoje',
+    labelEmail: 'Email', labelPassword: 'Senha', labelEmailR: 'Email', labelPasswordR: 'Senha',
+    btnLogin: 'Entrar', btnRegister: 'Criar Conta',
+    loginSwitch: 'Não tem conta?', goRegister: 'Cadastre-se',
+    registerSwitch: 'Já tem conta?', goLogin: 'Entre',
+    btnHeaderLogin: 'Entrar', btnHeaderRegister: 'Cadastrar',
+    statPlanLabel: 'Plano', statUsedLabel: 'Usado este mês',
+    uploadTitle: 'Arraste seu documento aqui', uploadSubtitle: 'ou clique para procurar arquivos',
+    processingText: 'A IA está analisando seu documento...',
+    resultsTitle: 'Dados Extraídos', btnNew: '+ Novo Documento', btnExport: '⬇ Exportar Excel',
+    upgradeText: '<strong>Plano gratuito:</strong> Assine para processar documentos.',
+    btnUpgradeBanner: 'Escolher Plano', btnUpgrade: '⬆ Upgrade',
+    cardKeyFields: 'Campos Chave', cardIssuer: 'Emissor / De', cardRecipient: 'Destinatário / Para',
+    cardLineItems: 'Itens', cardAdditional: 'Info Adicional',
+    thDesc: 'Descrição', thQty: 'Qtd.', thUnit: 'Preço Unit.', thTotal: 'Total',
+    errLogin: 'Email ou senha incorretos', errRegister: 'Erro ao cadastrar',
+    successRegister: 'Conta criada! Você já pode entrar.',
+    errNoFile: 'Por favor carregue um arquivo', errLimit: 'Limite mensal atingido. Por favor faça upgrade.',
+  },
+  fr: {
+    heroTitle: 'Extrayez les données de<br>n\'importe quel document',
+    heroSubtitle: 'Téléchargez des factures, contrats, reçus ou tout document commercial — l\'IA extrait toutes les données instantanément',
+    btnGetStarted: 'Commencer Gratuitement', btnSeePricing: 'Voir les Prix',
+    feat1: 'Factures et Contrats', feat2: 'Extraction Intelligente', feat3: 'Exporter vers Excel', feat4: 'N\'importe quelle Langue',
+    pricingTitle: 'Tarifs Simples', pricingSub: 'Commencez aujourd\'hui, annulez quand vous voulez',
+    pricingTitle2: 'Choisissez votre plan', pricingSub2: 'Commencez aujourd\'hui, annulez quand vous voulez',
+    perMonth: '/mois', perMonth2: '/mois',
+    starterName: 'Starter', proName: 'Pro',
+    starterUsd: '~$9 USD', proUsd: '~$19 USD',
+    sf1: '100 documents/mois', sf2: 'Support PDF, JPG, PNG', sf3: 'Export Excel', sf4: 'Interface EN, ES, PT, FR',
+    pf1: '300 documents/mois', pf2: 'Support PDF, JPG, PNG', pf3: 'Export Excel', pf4: 'Support prioritaire',
+    sf1b: '100 documents/mois', sf2b: 'Support PDF, JPG, PNG', sf3b: 'Export Excel', sf4b: 'Interface EN, ES, PT, FR',
+    pf1b: '300 documents/mois', pf2b: 'Support PDF, JPG, PNG', pf3b: 'Export Excel', pf4b: 'Support prioritaire',
+    btnStarter: 'Obtenir Starter', btnPro: 'Obtenir Pro', btnStarter2: 'Obtenir Starter', btnPro2: 'Obtenir Pro',
+    loginTitle: 'Bienvenue', loginSub: 'Connectez-vous à votre compte',
+    registerTitle: 'Créer un compte', registerSub: 'Commencez à extraire des documents aujourd\'hui',
+    labelEmail: 'Email', labelPassword: 'Mot de passe', labelEmailR: 'Email', labelPasswordR: 'Mot de passe',
+    btnLogin: 'Se Connecter', btnRegister: 'Créer un Compte',
+    loginSwitch: 'Pas de compte?', goRegister: 'S\'inscrire',
+    registerSwitch: 'Déjà un compte?', goLogin: 'Se connecter',
+    btnHeaderLogin: 'Connexion', btnHeaderRegister: 'S\'inscrire',
+    statPlanLabel: 'Plan', statUsedLabel: 'Utilisé ce mois',
+    uploadTitle: 'Déposez votre document ici', uploadSubtitle: 'ou cliquez pour parcourir les fichiers',
+    processingText: 'L\'IA analyse votre document...',
+    resultsTitle: 'Données Extraites', btnNew: '+ Nouveau Document', btnExport: '⬇ Exporter Excel',
+    upgradeText: '<strong>Plan gratuit:</strong> Abonnez-vous pour traiter des documents.',
+    btnUpgradeBanner: 'Choisir un Plan', btnUpgrade: '⬆ Upgrade',
+    cardKeyFields: 'Champs Clés', cardIssuer: 'Émetteur / De', cardRecipient: 'Destinataire / À',
+    cardLineItems: 'Articles', cardAdditional: 'Info Supplémentaire',
+    thDesc: 'Description', thQty: 'Qté', thUnit: 'Prix Unit.', thTotal: 'Total',
+    errLogin: 'Email ou mot de passe incorrect', errRegister: 'Erreur lors de l\'inscription',
+    successRegister: 'Compte créé! Vous pouvez maintenant vous connecter.',
+    errNoFile: 'Veuillez télécharger un fichier', errLimit: 'Limite mensuelle atteinte. Veuillez upgrader.',
+  }
+};
 
-  let currentLang = localStorage.getItem('lang') || 'en';
-  let currentData = null;
-  let currentFilename = null;
+let currentLang = localStorage.getItem('lang') || 'en';
+let currentData = null;
+let currentFilename = null;
+let authToken = localStorage.getItem('auth_token');
+let currentUser = null;
 
-  function t(key) { return TRANSLATIONS[currentLang][key] || key; }
+function t(key) { return TRANSLATIONS[currentLang][key] || key; }
 
-  function setLang(lang) {
-    currentLang = lang;
-    localStorage.setItem('lang', lang);
-    document.querySelectorAll('.lang-btn').forEach(b => {
-      b.classList.toggle('active', b.textContent === lang.toUpperCase());
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('lang', lang);
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent === lang.toUpperCase()));
+  applyTranslations();
+}
+
+function applyTranslations() {
+  const ids = ['heroTitle','heroSubtitle','btnGetStarted','btnSeePricing','feat1','feat2','feat3','feat4',
+    'pricingTitle','pricingSub','pricingTitle2','pricingSub2','perMonth','perMonth2',
+    'starterName','proName','starterUsd','proUsd',
+    'sf1','sf2','sf3','sf4','pf1','pf2','pf3','pf4',
+    'sf1b','sf2b','sf3b','sf4b','pf1b','pf2b','pf3b','pf4b',
+    'btnStarter','btnPro','btnStarter2','btnPro2',
+    'loginTitle','loginSub','registerTitle','registerSub',
+    'labelEmail','labelPassword','labelEmailR','labelPasswordR',
+    'btnLogin','btnRegister','btnHeaderLogin','btnHeaderRegister',
+    'statPlanLabel','statUsedLabel','uploadTitle','uploadSubtitle','processingText',
+    'resultsTitle','btnNew','btnExport','btnUpgradeBanner','btnUpgrade'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = t(id);
+  });
+  const ub = document.getElementById('upgradeText');
+  if (ub) ub.innerHTML = t('upgradeText');
+  const ls = document.getElementById('loginSwitch');
+  if (ls) ls.innerHTML = t('loginSwitch') + ' <a onclick="showPage(\'register\')">' + t('goRegister') + '</a>';
+  const rs = document.getElementById('registerSwitch');
+  if (rs) rs.innerHTML = t('registerSwitch') + ' <a onclick="showPage(\'login\')">' + t('goLogin') + '</a>';
+  if (currentData) renderResults(currentData);
+}
+
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+}
+
+function showError(elId, msg) {
+  const el = document.getElementById(elId);
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+function hideError(elId) {
+  const el = document.getElementById(elId);
+  if (el) el.style.display = 'none';
+}
+
+function updateHeader() {
+  if (currentUser) {
+    document.getElementById('headerAuth').style.display = 'none';
+    document.getElementById('headerUser').style.display = 'flex';
+    document.getElementById('userEmail').textContent = currentUser.email;
+    document.getElementById('btnUpgrade').style.display = currentUser.plan === 'none' ? 'block' : 'none';
+  } else {
+    document.getElementById('headerAuth').style.display = 'flex';
+    document.getElementById('headerUser').style.display = 'none';
+  }
+}
+
+function updateAppStats() {
+  if (!currentUser) return;
+  const planName = currentUser.plan === 'none' ? '—' : currentUser.plan.charAt(0).toUpperCase() + currentUser.plan.slice(1);
+  document.getElementById('statPlan').textContent = planName;
+  document.getElementById('statUsed').textContent = currentUser.docs_used || 0;
+  document.getElementById('statLimit').textContent = currentUser.docs_limit || 0;
+  const pct = currentUser.docs_limit > 0 ? Math.min(100, (currentUser.docs_used / currentUser.docs_limit) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('upgradeBanner').style.display = currentUser.plan === 'none' ? 'flex' : 'none';
+}
+
+async function doLogin() {
+  hideError('loginError');
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  try {
+    const res = await fetch('/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email, password})
     });
-    applyTranslations();
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || t('errLogin'));
+    authToken = data.token;
+    localStorage.setItem('auth_token', authToken);
+    currentUser = data;
+    updateHeader();
+    updateAppStats();
+    showPage('app');
+  } catch(err) {
+    showError('loginError', err.message);
   }
+}
 
-  function applyTranslations() {
-    document.getElementById('tagline').textContent = t('tagline');
-    document.getElementById('heroTitle').textContent = t('heroTitle');
-    document.getElementById('heroSubtitle').textContent = t('heroSubtitle');
-    document.getElementById('apiKeyLabel').textContent = t('apiKeyLabel');
-    document.getElementById('btnSave').textContent = t('btnSave');
-    document.getElementById('uploadTitle').textContent = t('uploadTitle');
-    document.getElementById('uploadSubtitle').textContent = t('uploadSubtitle');
-    document.getElementById('processingText').textContent = t('processingText');
-    document.getElementById('resultsTitle').textContent = t('resultsTitle');
-    document.getElementById('btnNew').textContent = t('btnNew');
-    document.getElementById('btnExport').textContent = t('btnExport');
-    if (currentData) renderResults(currentData);
+async function doRegister() {
+  hideError('registerError');
+  document.getElementById('registerSuccess').style.display = 'none';
+  const email = document.getElementById('registerEmail').value.trim();
+  const password = document.getElementById('registerPassword').value;
+  try {
+    const res = await fetch('/auth/register', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email, password})
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || t('errRegister'));
+    authToken = data.token;
+    localStorage.setItem('auth_token', authToken);
+    currentUser = data;
+    updateHeader();
+    updateAppStats();
+    showPage('app');
+  } catch(err) {
+    showError('registerError', err.message);
   }
+}
 
-  // Init
-  const savedKey = localStorage.getItem('anthropic_api_key');
-  if (savedKey) document.getElementById('apiKeyInput').value = savedKey;
-  setLang(currentLang);
+function logout() {
+  authToken = null;
+  currentUser = null;
+  localStorage.removeItem('auth_token');
+  updateHeader();
+  showPage('home');
+}
 
-  function saveApiKey() {
-    const key = document.getElementById('apiKeyInput').value.trim();
-    if (!key) return alert(t('alertNoKey'));
-    localStorage.setItem('anthropic_api_key', key);
-    alert(t('alertKeySaved'));
-  }
+function subscribePlan(plan) {
+  if (!authToken) { showPage('register'); return; }
+  const links = { starter: 'https://mpago.la/1aAxegd', pro: 'https://mpago.la/1UvoSPg' };
+  const url = links[plan] + '?external_reference=' + authToken + '_' + plan;
+  window.open(url, '_blank');
+  // Show manual activation option
+  setTimeout(() => {
+    if(confirm('After completing payment, click OK to activate your plan.')) {
+      activatePlan(plan);
+    }
+  }, 2000);
+}
 
-  const uploadArea = document.getElementById('uploadArea');
-  uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
-  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
-  uploadArea.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadArea.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file) processFile(file);
-  });
+async function activatePlan(plan) {
+  try {
+    const res = await fetch('/auth/activate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({token: authToken, plan})
+    });
+    const data = await res.json();
+    if (res.ok) {
+      currentUser.plan = plan;
+      currentUser.docs_used = 0;
+      currentUser.docs_limit = plan === 'starter' ? 100 : 300;
+      updateHeader();
+      updateAppStats();
+      showPage('app');
+      alert(plan === 'starter' ? '✓ Starter plan activated!' : '✓ Pro plan activated!');
+    }
+  } catch(err) {}
+}
 
-  document.getElementById('fileInput').addEventListener('change', e => {
-    if (e.target.files[0]) processFile(e.target.files[0]);
-  });
+// File upload
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+});
+document.getElementById('fileInput').addEventListener('change', e => {
+  if (e.target.files[0]) processFile(e.target.files[0]);
+});
 
-  async function processFile(file) {
-    const apiKey = document.getElementById('apiKeyInput').value.trim();
-    if (!apiKey) { showError(t('alertNoKeyUpload')); return; }
-    localStorage.setItem('anthropic_api_key', apiKey);
-    hideError();
-    showProcessing();
+async function processFile(file) {
+  hideError('appError');
+  document.getElementById('uploadArea').style.display = 'none';
+  document.getElementById('processing').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+
+  try {
     const formData = new FormData();
     formData.append('file', file);
-    try {
-      const response = await fetch('/extract', {
-        method: 'POST',
-        headers: { 'X-API-Key': apiKey },
-        body: formData
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.detail || 'Error processing document');
-      currentData = result.data;
-      currentFilename = result.filename;
-      renderResults(result.data);
-      showResults();
-    } catch (err) {
-      hideProcessing();
-      showError(err.message);
-    }
-  }
+    const headers = {};
+    if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
 
-  function renderResults(data) {
-    const container = document.getElementById('resultsContent');
-    let html = '';
-    if (data.document_type) html += `<div class="doc-type-badge">${data.document_type}</div>`;
-    if (data.summary) html += `<p class="summary-text">${data.summary}</p>`;
+    const res = await fetch('/extract', { method: 'POST', headers, body: formData });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.detail || 'Error processing document');
 
-    const kf = data.key_fields || {};
-    const kfEntries = Object.entries(kf).filter(([, v]) => v);
-    if (kfEntries.length) {
-      html += `<div class="card"><div class="card-title">${t('cardKeyFields')}</div>`;
-      kfEntries.forEach(([k, v]) => {
-        html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`;
-      });
-      html += `</div>`;
+    currentData = result.data;
+    currentFilename = result.filename;
+    renderResults(result.data);
+
+    if (currentUser) {
+      currentUser.docs_used = (currentUser.docs_used || 0) + 1;
+      updateAppStats();
     }
 
-    const issuer = data.parties?.issuer || {};
-    const recipient = data.parties?.recipient || {};
-    const issuerEntries = Object.entries(issuer).filter(([, v]) => v);
-    if (issuerEntries.length) {
-      html += `<div class="card"><div class="card-title">${t('cardIssuer')}</div>`;
-      issuerEntries.forEach(([k, v]) => {
-        html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`;
-      });
-      html += `</div>`;
-    }
-
-    const recipientEntries = Object.entries(recipient).filter(([, v]) => v);
-    if (recipientEntries.length) {
-      html += `<div class="card"><div class="card-title">${t('cardRecipient')}</div>`;
-      recipientEntries.forEach(([k, v]) => {
-        html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`;
-      });
-      html += `</div>`;
-    }
-
-    const items = data.line_items || [];
-    if (items.length) {
-      html += `<div class="card"><div class="card-title">${t('cardLineItems')}</div>
-        <table>
-          <thead><tr><th>${t('thDesc')}</th><th>${t('thQty')}</th><th>${t('thUnit')}</th><th>${t('thTotal')}</th></tr></thead>
-          <tbody>`;
-      items.forEach(item => {
-        html += `<tr>
-          <td>${item.description || ''}</td>
-          <td>${item.quantity || ''}</td>
-          <td>${item.unit_price || ''}</td>
-          <td>${item.total || ''}</td>
-        </tr>`;
-      });
-      html += `</tbody></table></div>`;
-    }
-
-    const ai = data.additional_info || {};
-    const aiEntries = Object.entries(ai).filter(([, v]) => v);
-    if (aiEntries.length) {
-      html += `<div class="card"><div class="card-title">${t('cardAdditional')}</div>`;
-      aiEntries.forEach(([k, v]) => {
-        html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`;
-      });
-      html += `</div>`;
-    }
-
-    container.innerHTML = html;
-  }
-
-  async function exportExcel() {
-    if (!currentData) return;
-    try {
-      const response = await fetch('/export-excel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: currentData, filename: currentFilename })
-      });
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = currentFilename.replace(/\.[^.]+$/, '') + '_extracted.xlsx';
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      showError(t('errorExport') + err.message);
-    }
-  }
-
-  function formatLabel(key) {
-    return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-  }
-
-  function showProcessing() {
-    document.getElementById('uploadArea').style.display = 'none';
-    document.getElementById('processing').style.display = 'block';
-    document.getElementById('results').style.display = 'none';
-  }
-
-  function showResults() {
     document.getElementById('processing').style.display = 'none';
     document.getElementById('results').style.display = 'block';
-  }
-
-  function hideProcessing() {
+  } catch(err) {
     document.getElementById('processing').style.display = 'none';
     document.getElementById('uploadArea').style.display = 'block';
+    showError('appError', err.message);
+  }
+}
+
+function renderResults(data) {
+  const container = document.getElementById('resultsContent');
+  let html = '';
+  if (data.document_type) html += `<div class="doc-type-badge">${data.document_type}</div>`;
+  if (data.summary) html += `<p class="summary-text">${data.summary}</p>`;
+
+  const kf = data.key_fields || {};
+  const kfEntries = Object.entries(kf).filter(([,v]) => v);
+  if (kfEntries.length) {
+    html += `<div class="card"><div class="card-title">${t('cardKeyFields')}</div>`;
+    kfEntries.forEach(([k,v]) => html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`);
+    html += `</div>`;
   }
 
-  function showError(msg) {
-    const el = document.getElementById('errorMsg');
-    el.textContent = msg;
-    el.style.display = 'block';
+  const issuer = data.parties?.issuer || {};
+  const recipient = data.parties?.recipient || {};
+  const issuerEntries = Object.entries(issuer).filter(([,v]) => v);
+  if (issuerEntries.length) {
+    html += `<div class="card"><div class="card-title">${t('cardIssuer')}</div>`;
+    issuerEntries.forEach(([k,v]) => html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`);
+    html += `</div>`;
   }
 
-  function hideError() {
-    document.getElementById('errorMsg').style.display = 'none';
+  const recipientEntries = Object.entries(recipient).filter(([,v]) => v);
+  if (recipientEntries.length) {
+    html += `<div class="card"><div class="card-title">${t('cardRecipient')}</div>`;
+    recipientEntries.forEach(([k,v]) => html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`);
+    html += `</div>`;
   }
 
-  function resetApp() {
-    currentData = null;
-    currentFilename = null;
-    document.getElementById('results').style.display = 'none';
-    document.getElementById('uploadArea').style.display = 'block';
-    document.getElementById('fileInput').value = '';
-    hideError();
+  const items = data.line_items || [];
+  if (items.length) {
+    html += `<div class="card"><div class="card-title">${t('cardLineItems')}</div>
+      <table><thead><tr><th>${t('thDesc')}</th><th>${t('thQty')}</th><th>${t('thUnit')}</th><th>${t('thTotal')}</th></tr></thead><tbody>`;
+    items.forEach(item => html += `<tr><td>${item.description||''}</td><td>${item.quantity||''}</td><td>${item.unit_price||''}</td><td>${item.total||''}</td></tr>`);
+    html += `</tbody></table></div>`;
   }
+
+  const ai = data.additional_info || {};
+  const aiEntries = Object.entries(ai).filter(([,v]) => v);
+  if (aiEntries.length) {
+    html += `<div class="card"><div class="card-title">${t('cardAdditional')}</div>`;
+    aiEntries.forEach(([k,v]) => html += `<div class="field-row"><span class="field-label">${formatLabel(k)}</span><span class="field-value">${v}</span></div>`);
+    html += `</div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+async function exportExcel() {
+  if (!currentData) return;
+  const res = await fetch('/export-excel', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({data: currentData, filename: currentFilename})
+  });
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = currentFilename.replace(/\.[^.]+$/, '') + '_extracted.xlsx';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function formatLabel(key) { return key.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase()); }
+
+function resetApp() {
+  currentData = null; currentFilename = null;
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('uploadArea').style.display = 'block';
+  document.getElementById('fileInput').value = '';
+  hideError('appError');
+}
+
+// Init
+async function init() {
+  setLang(currentLang);
+  if (authToken) {
+    try {
+      const res = await fetch('/auth/me', { headers: { 'Authorization': 'Bearer ' + authToken } });
+      if (res.ok) {
+        currentUser = await res.json();
+        updateHeader();
+        updateAppStats();
+        showPage('app');
+      } else {
+        localStorage.removeItem('auth_token');
+        authToken = null;
+      }
+    } catch(e) {}
+  }
+}
+
+init();
 </script>
 </body>
 </html>
