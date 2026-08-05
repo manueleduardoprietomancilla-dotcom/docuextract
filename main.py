@@ -44,9 +44,21 @@ PLANS = {
 
 EXTRACTION_PROMPT = """Analyze this document carefully.
 
-IMPORTANT: If the document contains MULTIPLE invoices, receipts or contracts (more than one), return a JSON array where each element is one document. If it contains only ONE document, return a single JSON object.
+FIRST, determine which case applies:
 
-For EACH document, use this structure (no markdown, no explanation):
+CASE A — Multiple separate documents (different invoice numbers, different dates, different parties):
+→ Return a JSON ARRAY, one object per document.
+
+CASE B — One single document that spans multiple pages (same invoice number, same transaction, just long):
+→ Return a single JSON OBJECT. Do NOT split it.
+
+RULES to distinguish:
+- If you see multiple different invoice/document numbers → CASE A
+- If you see multiple different issuers or recipients → CASE A
+- If the document is just one invoice/contract with many line items across pages → CASE B
+- If unsure, treat as CASE B (single document)
+
+For each document (whether one or many), use this exact structure:
 {
   "document_type": "invoice|contract|receipt|quote|other",
   "language": "detected language",
@@ -89,7 +101,7 @@ For EACH document, use this structure (no markdown, no explanation):
   }
 }
 
-If a field is not found, use null. Extract everything visible."""
+Return ONLY valid JSON. No markdown, no explanation. If a field is not found, use null."""
 
 
 def get_db():
