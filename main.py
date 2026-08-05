@@ -318,12 +318,30 @@ async def extract_document(
         )
 
     raw_text = message.content[0].text.strip()
-    if raw_text.startswith("```"):
-        lines = raw_text.split("\n")
-        raw_text = "\n".join(lines[1:-1])
 
-    parsed = json.loads(raw_text)
-    # Normalize: always return a list of documents
+    # Clean markdown code blocks if present
+    if "```" in raw_text:
+        import re
+        match = re.search(r'```(?:json)?\s*([\s\S]*?)```', raw_text)
+        if match:
+            raw_text = match.group(1).strip()
+        else:
+            lines = raw_text.split("\n")
+            raw_text = "\n".join(l for l in lines if not l.strip().startswith("```"))
+
+    # Find JSON content (object or array) in case there's extra text
+    raw_text = raw_text.strip()
+    if not (raw_text.startswith("{") or raw_text.startswith("[")):
+        import re
+        match = re.search(r'(\{[\s\S]*\}|\[[\s\S]*\])', raw_text)
+        if match:
+            raw_text = match.group(1)
+
+    try:
+        parsed = json.loads(raw_text)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=500, detail=f"Could not parse AI response. Please try again. Error: {str(e)}")
+
     if isinstance(parsed, list):
         documents = parsed
     else:
