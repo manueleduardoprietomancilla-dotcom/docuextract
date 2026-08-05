@@ -859,7 +859,8 @@ async function processFile(file) {
     const headers = {};
     if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
     const res = await fetch('/extract', { method:'POST', headers, body: formData });
-    const result = await res.json();
+    let result;
+    try { result = await res.json(); } catch(jsonErr) { throw new Error('Server error. Please try again.'); }
     if (!res.ok) throw new Error(result.detail || 'Error processing document');
     currentData = result.data;
     currentFilename = result.filename;

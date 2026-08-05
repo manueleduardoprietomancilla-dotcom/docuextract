@@ -340,7 +340,9 @@ async def extract_document(
     try:
         parsed = json.loads(raw_text)
     except json.JSONDecodeError as e:
-        raise HTTPException(status_code=500, detail=f"Could not parse AI response. Please try again. Error: {str(e)}")
+        print(f"JSON parse error: {e}")
+        print(f"Raw text was: {raw_text[:500]}")
+        raise HTTPException(status_code=422, detail="Could not parse AI response. Please try again.")
 
     if isinstance(parsed, list):
         documents = parsed
@@ -354,6 +356,11 @@ async def extract_document(
         conn.close()
 
     return {"success": True, "data": documents[0] if len(documents) == 1 else documents, "multiple": len(documents) > 1, "count": len(documents), "filename": file.filename}
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    print(f"Unhandled error: {exc}")
+    return JSONResponse(status_code=500, content={"detail": "Server error. Please try again."})
 
 
 @app.post("/export-excel")
