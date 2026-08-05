@@ -37,17 +37,20 @@ ALLOWED_TYPES = {
 }
 
 PLANS = {
+    "free": {"name": "Free Trial", "limit": 3, "price_cop": 0, "link": ""},
     "starter": {"name": "Starter", "limit": 100, "price_cop": 37000, "link": "https://mpago.la/1aAxegd"},
     "pro": {"name": "Pro", "limit": 300, "price_cop": 78000, "link": "https://mpago.la/1UvoSPg"},
 }
 
-EXTRACTION_PROMPT = """Analyze this document and extract all relevant information.
+EXTRACTION_PROMPT = """Analyze this document carefully.
 
-Return ONLY a valid JSON object with this structure (no markdown, no explanation):
+IMPORTANT: If the document contains MULTIPLE invoices, receipts or contracts (more than one), return a JSON array where each element is one document. If it contains only ONE document, return a single JSON object.
+
+For EACH document, use this structure (no markdown, no explanation):
 {
   "document_type": "invoice|contract|receipt|quote|other",
   "language": "detected language",
-  "summary": "brief one-line description of the document",
+  "summary": "brief one-line description",
   "key_fields": {
     "date": "document date if found",
     "due_date": "due date if found",
@@ -82,11 +85,11 @@ Return ONLY a valid JSON object with this structure (no markdown, no explanation
   "additional_info": {
     "payment_method": "payment method if found",
     "payment_terms": "payment terms if found",
-    "notes": "any important notes or conditions"
+    "notes": "any important notes"
   }
 }
 
-If a field is not found, use null. Extract everything visible in the document."""
+If a field is not found, use null. Extract everything visible."""
 
 
 def get_db():
@@ -103,7 +106,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
-            plan TEXT DEFAULT 'none',
+            plan TEXT DEFAULT 'free',
             docs_used INTEGER DEFAULT 0,
             docs_reset_date TEXT,
             token TEXT,
@@ -169,13 +172,14 @@ async def register(req: RegisterRequest):
         conn.close()
         raise HTTPException(status_code=400, detail="Email already registered")
     token = secrets.token_hex(32)
+    next_reset = (datetime.now() + timedelta(days=30)).isoformat()
     conn.execute(
-        "INSERT INTO users (email, password_hash, token) VALUES (?, ?, ?)",
-        (req.email, hash_password(req.password), token)
+        "INSERT INTO users (email, password_hash, token, plan, docs_reset_date) VALUES (?, ?, ?, 'free', ?)",
+        (req.email, hash_password(req.password), token, next_reset)
     )
     conn.commit()
     conn.close()
-    return {"success": True, "token": token, "email": req.email, "plan": "none", "docs_used": 0}
+    return {"success": True, "token": token, "email": req.email, "plan": "free", "docs_used": 0, "docs_limit": 3}
 
 
 @app.post("/auth/login")
@@ -251,9 +255,9 @@ async def extract_document(
     if user:
         reset_docs_if_needed(user)
         user = get_user_by_token(token)
-        if user["plan"] == "none":
+        plan_limit = PLANS.get(user["plan"], {}).get("limit", 0)
+        if plan_limit == 0:
             raise HTTPException(status_code=403, detail="Please subscribe to a plan to process documents.")
-        plan_limit = PLANS[user["plan"]]["limit"]
         if user["docs_used"] >= plan_limit:
             raise HTTPException(status_code=403, detail=f"Monthly limit reached ({plan_limit} documents). Please upgrade your plan.")
         api_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -306,7 +310,12 @@ async def extract_document(
         lines = raw_text.split("\n")
         raw_text = "\n".join(lines[1:-1])
 
-    extracted = json.loads(raw_text)
+    parsed = json.loads(raw_text)
+    # Normalize: always return a list of documents
+    if isinstance(parsed, list):
+        documents = parsed
+    else:
+        documents = [parsed]
 
     if user:
         conn = get_db()
@@ -314,114 +323,108 @@ async def extract_document(
         conn.commit()
         conn.close()
 
-    return {"success": True, "data": extracted, "filename": file.filename}
+    return {"success": True, "data": documents[0] if len(documents) == 1 else documents, "multiple": len(documents) > 1, "count": len(documents), "filename": file.filename}
 
 
 @app.post("/export-excel")
 async def export_excel(data: dict):
-    extracted = data.get("data", {})
+    raw = data.get("data", {})
     filename = data.get("filename", "document")
+    # Support both single doc and multiple docs
+    docs = raw if isinstance(raw, list) else [raw]
 
     wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Extracted Data"
+    wb.remove(wb.active)
 
     header_fill = PatternFill(start_color="1a1a2e", end_color="1a1a2e", fill_type="solid")
     header_font = Font(color="FFFFFF", bold=True, size=11)
     section_fill = PatternFill(start_color="16213e", end_color="16213e", fill_type="solid")
     section_font = Font(color="4fc3f7", bold=True, size=10)
 
-    def write_header(row, text):
-        cell = ws.cell(row=row, column=1, value=text)
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = Alignment(horizontal="center")
-        ws.merge_cells(f"A{row}:D{row}")
+    def write_sheet(ws, extracted, doc_label):
+        def write_header(row, text):
+            cell = ws.cell(row=row, column=1, value=text)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center")
+            ws.merge_cells(f"A{row}:D{row}")
 
-    def write_section(row, text):
-        cell = ws.cell(row=row, column=1, value=text)
-        cell.fill = section_fill
-        cell.font = section_font
-        ws.merge_cells(f"A{row}:D{row}")
+        def write_section(row, text):
+            cell = ws.cell(row=row, column=1, value=text)
+            cell.fill = section_fill
+            cell.font = section_font
+            ws.merge_cells(f"A{row}:D{row}")
 
-    def write_row(row, label, value):
-        ws.cell(row=row, column=1, value=label).font = Font(bold=True)
-        ws.cell(row=row, column=2, value=str(value) if value else "")
+        def write_row(row, label, value):
+            ws.cell(row=row, column=1, value=label).font = Font(bold=True)
+            ws.cell(row=row, column=2, value=str(value) if value else "")
 
-    current_row = 1
-    write_header(current_row, f"DocuExtract AI - {filename}")
-    current_row += 2
+        r = 1
+        write_header(r, f"DocuExtract AI - {doc_label}")
+        r += 2
 
-    write_section(current_row, "DOCUMENT INFO")
-    current_row += 1
-    write_row(current_row, "Document Type", extracted.get("document_type", ""))
-    current_row += 1
-    write_row(current_row, "Language", extracted.get("language", ""))
-    current_row += 1
-    write_row(current_row, "Summary", extracted.get("summary", ""))
-    current_row += 2
+        write_section(r, "DOCUMENT INFO"); r += 1
+        write_row(r, "Document Type", extracted.get("document_type", "")); r += 1
+        write_row(r, "Language", extracted.get("language", "")); r += 1
+        write_row(r, "Summary", extracted.get("summary", "")); r += 2
 
-    key_fields = extracted.get("key_fields", {})
-    if key_fields:
-        write_section(current_row, "KEY FIELDS")
-        current_row += 1
-        for k, v in key_fields.items():
-            if v:
-                write_row(current_row, k.replace("_", " ").title(), v)
-                current_row += 1
-        current_row += 1
+        kf = extracted.get("key_fields", {})
+        if kf:
+            write_section(r, "KEY FIELDS"); r += 1
+            for k, v in kf.items():
+                if v:
+                    write_row(r, k.replace("_", " ").title(), v); r += 1
+            r += 1
 
-    parties = extracted.get("parties", {})
-    issuer = parties.get("issuer", {})
-    recipient = parties.get("recipient", {})
+        parties = extracted.get("parties", {})
+        issuer = parties.get("issuer", {})
+        recipient = parties.get("recipient", {})
 
-    if any(issuer.values()):
-        write_section(current_row, "ISSUER / FROM")
-        current_row += 1
-        for k, v in issuer.items():
-            if v:
-                write_row(current_row, k.replace("_", " ").title(), v)
-                current_row += 1
-        current_row += 1
+        if any(v for v in issuer.values() if v):
+            write_section(r, "ISSUER / FROM"); r += 1
+            for k, v in issuer.items():
+                if v:
+                    write_row(r, k.replace("_", " ").title(), v); r += 1
+            r += 1
 
-    if any(v for v in recipient.values() if v):
-        write_section(current_row, "RECIPIENT / TO")
-        current_row += 1
-        for k, v in recipient.items():
-            if v:
-                write_row(current_row, k.replace("_", " ").title(), v)
-                current_row += 1
-        current_row += 1
+        if any(v for v in recipient.values() if v):
+            write_section(r, "RECIPIENT / TO"); r += 1
+            for k, v in recipient.items():
+                if v:
+                    write_row(r, k.replace("_", " ").title(), v); r += 1
+            r += 1
 
-    line_items = extracted.get("line_items", [])
-    if line_items:
-        write_section(current_row, "LINE ITEMS")
-        current_row += 1
-        headers = ["Description", "Quantity", "Unit Price", "Total"]
-        for col, h in enumerate(headers, 1):
-            ws.cell(row=current_row, column=col, value=h).font = Font(bold=True)
-        current_row += 1
-        for item in line_items:
-            ws.cell(row=current_row, column=1, value=item.get("description", ""))
-            ws.cell(row=current_row, column=2, value=item.get("quantity", ""))
-            ws.cell(row=current_row, column=3, value=item.get("unit_price", ""))
-            ws.cell(row=current_row, column=4, value=item.get("total", ""))
-            current_row += 1
-        current_row += 1
+        items = extracted.get("line_items", [])
+        if items:
+            write_section(r, "LINE ITEMS"); r += 1
+            for col, h in enumerate(["Description", "Quantity", "Unit Price", "Total"], 1):
+                ws.cell(row=r, column=col, value=h).font = Font(bold=True)
+            r += 1
+            for item in items:
+                ws.cell(row=r, column=1, value=item.get("description", ""))
+                ws.cell(row=r, column=2, value=item.get("quantity", ""))
+                ws.cell(row=r, column=3, value=item.get("unit_price", ""))
+                ws.cell(row=r, column=4, value=item.get("total", ""))
+                r += 1
+            r += 1
 
-    additional = extracted.get("additional_info", {})
-    if any(v for v in additional.values() if v):
-        write_section(current_row, "ADDITIONAL INFO")
-        current_row += 1
-        for k, v in additional.items():
-            if v:
-                write_row(current_row, k.replace("_", " ").title(), v)
-                current_row += 1
+        additional = extracted.get("additional_info", {})
+        if any(v for v in additional.values() if v):
+            write_section(r, "ADDITIONAL INFO"); r += 1
+            for k, v in additional.items():
+                if v:
+                    write_row(r, k.replace("_", " ").title(), v); r += 1
 
-    ws.column_dimensions["A"].width = 25
-    ws.column_dimensions["B"].width = 40
-    ws.column_dimensions["C"].width = 20
-    ws.column_dimensions["D"].width = 20
+        ws.column_dimensions["A"].width = 25
+        ws.column_dimensions["B"].width = 40
+        ws.column_dimensions["C"].width = 20
+        ws.column_dimensions["D"].width = 20
+
+    for i, doc in enumerate(docs):
+        sheet_title = f"Doc {i+1}" if len(docs) > 1 else "Extracted Data"
+        ws = wb.create_sheet(title=sheet_title)
+        label = f"{filename} ({i+1}/{len(docs)})" if len(docs) > 1 else filename
+        write_sheet(ws, doc, label)
 
     excel_buffer = io.BytesIO()
     wb.save(excel_buffer)
