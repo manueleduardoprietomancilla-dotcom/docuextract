@@ -342,6 +342,35 @@ async def extract_document(
 async def export_excel(data: dict):
     raw = data.get("data", {})
     filename = data.get("filename", "document")
+    lang = data.get("lang", "en")
+
+    LABELS = {
+        "en": {
+            "doc_info": "DOCUMENT INFO", "doc_type": "Document Type", "language": "Language", "summary": "Summary",
+            "key_fields": "KEY FIELDS", "issuer": "ISSUER / FROM", "recipient": "RECIPIENT / TO",
+            "line_items": "LINE ITEMS", "additional": "ADDITIONAL INFO",
+            "desc": "Description", "qty": "Qty", "unit": "Unit Price", "total": "Total",
+        },
+        "es": {
+            "doc_info": "INFORMACIÓN DEL DOCUMENTO", "doc_type": "Tipo de Documento", "language": "Idioma", "summary": "Resumen",
+            "key_fields": "CAMPOS CLAVE", "issuer": "EMISOR / DE", "recipient": "RECEPTOR / PARA",
+            "line_items": "ARTÍCULOS", "additional": "INFORMACIÓN ADICIONAL",
+            "desc": "Descripción", "qty": "Cant.", "unit": "Precio Unit.", "total": "Total",
+        },
+        "pt": {
+            "doc_info": "INFORMAÇÃO DO DOCUMENTO", "doc_type": "Tipo de Documento", "language": "Idioma", "summary": "Resumo",
+            "key_fields": "CAMPOS CHAVE", "issuer": "EMISSOR / DE", "recipient": "DESTINATÁRIO / PARA",
+            "line_items": "ITENS", "additional": "INFORMAÇÃO ADICIONAL",
+            "desc": "Descrição", "qty": "Qtd.", "unit": "Preço Unit.", "total": "Total",
+        },
+        "fr": {
+            "doc_info": "INFORMATIONS DU DOCUMENT", "doc_type": "Type de Document", "language": "Langue", "summary": "Résumé",
+            "key_fields": "CHAMPS CLÉS", "issuer": "ÉMETTEUR / DE", "recipient": "DESTINATAIRE / À",
+            "line_items": "ARTICLES", "additional": "INFORMATIONS SUPPLÉMENTAIRES",
+            "desc": "Description", "qty": "Qté", "unit": "Prix Unit.", "total": "Total",
+        },
+    }
+    L = LABELS.get(lang, LABELS["en"])
     # Support both single doc and multiple docs
     docs = raw if isinstance(raw, list) else [raw]
 
@@ -375,14 +404,14 @@ async def export_excel(data: dict):
         write_header(r, f"DocuExtract AI - {doc_label}")
         r += 2
 
-        write_section(r, "DOCUMENT INFO"); r += 1
-        write_row(r, "Document Type", extracted.get("document_type", "")); r += 1
-        write_row(r, "Language", extracted.get("language", "")); r += 1
-        write_row(r, "Summary", extracted.get("summary", "")); r += 2
+        write_section(r, L["doc_info"]); r += 1
+        write_row(r, L["doc_type"], extracted.get("document_type", "")); r += 1
+        write_row(r, L["language"], extracted.get("language", "")); r += 1
+        write_row(r, L["summary"], extracted.get("summary", "")); r += 2
 
         kf = extracted.get("key_fields", {})
         if kf:
-            write_section(r, "KEY FIELDS"); r += 1
+            write_section(r, L["key_fields"]); r += 1
             for k, v in kf.items():
                 if v:
                     write_row(r, k.replace("_", " ").title(), v); r += 1
@@ -393,14 +422,14 @@ async def export_excel(data: dict):
         recipient = parties.get("recipient", {})
 
         if any(v for v in issuer.values() if v):
-            write_section(r, "ISSUER / FROM"); r += 1
+            write_section(r, L["issuer"]); r += 1
             for k, v in issuer.items():
                 if v:
                     write_row(r, k.replace("_", " ").title(), v); r += 1
             r += 1
 
         if any(v for v in recipient.values() if v):
-            write_section(r, "RECIPIENT / TO"); r += 1
+            write_section(r, L["recipient"]); r += 1
             for k, v in recipient.items():
                 if v:
                     write_row(r, k.replace("_", " ").title(), v); r += 1
@@ -408,8 +437,8 @@ async def export_excel(data: dict):
 
         items = extracted.get("line_items", [])
         if items:
-            write_section(r, "LINE ITEMS"); r += 1
-            for col, h in enumerate(["Description", "Quantity", "Unit Price", "Total"], 1):
+            write_section(r, L["line_items"]); r += 1
+            for col, h in enumerate([L["desc"], L["qty"], L["unit"], L["total"]], 1):
                 ws.cell(row=r, column=col, value=h).font = Font(bold=True)
             r += 1
             for item in items:
@@ -422,7 +451,7 @@ async def export_excel(data: dict):
 
         additional = extracted.get("additional_info", {})
         if any(v for v in additional.values() if v):
-            write_section(r, "ADDITIONAL INFO"); r += 1
+            write_section(r, L["additional"]); r += 1
             for k, v in additional.items():
                 if v:
                     write_row(r, k.replace("_", " ").title(), v); r += 1
