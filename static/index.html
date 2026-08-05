@@ -217,6 +217,9 @@
     /* Divider */
     .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
 
+    .btn-back { background: transparent; border: none; color: var(--text2); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; padding: 0; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 4px; transition: color 0.15s; }
+    .btn-back:hover { color: var(--text); }
+
     /* Responsive */
     @media(max-width:640px) {
       header { padding: 0 16px; }
@@ -360,6 +363,7 @@
 <div id="page-pricing" class="page">
   <div class="section">
     <div class="container">
+      <button class="btn-back" onclick="goBack()" id="btnBackPricing">← Back</button>
       <div class="section-label" id="priceLabel2">Pricing</div>
       <h2 class="section-title" id="priceTitle2">Simple, transparent pricing</h2>
       <p class="section-sub" id="priceSub2">Start free. Upgrade when you need more.</p>
@@ -402,6 +406,7 @@
 <div id="page-login" class="page">
   <div class="auth-wrap">
     <div class="auth-card">
+      <button class="btn-back" onclick="goBack()" id="btnBackLogin" style="margin-bottom:16px">← Back</button>
       <div class="auth-logo"><div class="logo"><span class="logo-dot"></span> DocuExtract AI</div></div>
       <h2 class="auth-title" id="loginTitle">Welcome back</h2>
       <p class="auth-sub" id="loginSub">Sign in to your account</p>
@@ -426,6 +431,7 @@
 <div id="page-register" class="page">
   <div class="auth-wrap">
     <div class="auth-card">
+      <button class="btn-back" onclick="goBack()" id="btnBackRegister" style="margin-bottom:16px">← Back</button>
       <div class="auth-logo"><div class="logo"><span class="logo-dot"></span> DocuExtract AI</div></div>
       <h2 class="auth-title" id="registerTitle">Create your account</h2>
       <p class="auth-sub" id="registerSub">Start extracting documents today</p>
@@ -719,9 +725,21 @@ function applyTranslations() {
   if (currentData) renderResults(currentData);
 }
 
+let pageHistory = ['home'];
+
 function showPage(p) {
+  const current = pageHistory[pageHistory.length - 1];
+  if (current !== p) pageHistory.push(p);
   document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
   document.getElementById('page-' + p).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function goBack() {
+  if (pageHistory.length > 1) pageHistory.pop();
+  const prev = pageHistory[pageHistory.length - 1];
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+  document.getElementById('page-' + prev).classList.add('active');
   window.scrollTo(0,0);
 }
 
